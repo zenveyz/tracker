@@ -21,6 +21,79 @@ const C = {
 };
 const SCHEME_C = Object.fromEntries(Object.entries(SCHEME).map(([k, v]) => [k, new THREE.Color(v)]));
 const MODEL_URL = new URL('../models/', import.meta.url);
+export { SCHEME_C };
+
+// ---------- линии мышц в шейдере ----------
+const lineU = { uLineOn: { value: 1 }, uLineT: { value: 0.76 }, uLineC: { value: new THREE.Color('#14161c') } };
+function withLines(mat) {
+  mat.onBeforeCompile = (sh) => {
+    Object.assign(sh.uniforms, lineU);
+    sh.vertexShader = sh.vertexShader
+      .replace('#include <common>', '#include <common>\nattribute float aEdge;\nattribute float aInner;\nvarying float vEdge;\nvarying float vInner;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdge = aEdge;\nvInner = aInner;');
+    sh.fragmentShader = sh.fragmentShader
+      .replace('#include <common>', '#include <common>\nuniform float uLineOn;\nuniform float uLineT;\nuniform vec3 uLineC;\nvarying float vEdge;\nvarying float vInner;')
+      .replace('#include <color_fragment>', `#include <color_fragment>
+        float we = max(fwidth(vEdge), 0.0001);
+        float le = smoothstep(uLineT - we, uLineT + we, vEdge);
+        // границы мышц — тёмные, рельеф внутри мышцы — светлее (наполовину к цвету мышцы)
+        vec3 lc = mix(uLineC, diffuseColor.rgb, 0.55 * vInner);
+        diffuseColor.rgb = mix(diffuseColor.rgb, lc, le * uLineOn);`);
+  };
+}
+
+// материал «как на схеме»: светлый toon + тёмные линии мышц + контур
+export function bodyMaterials() {
+  const steps = new Uint8Array([150, 196, 232, 255]);
+  const grad = new THREE.DataTexture(steps, 4, 1, THREE.RedFormat);
+  grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
+  const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: grad });
+  withLines(mat);
+  const om = new THREE.MeshBasicMaterial({ color: 0x14161c, side: THREE.BackSide });
+  om.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = position + normal * 0.0024;'); };
+  return { mat, om };
+}
+
+// Модель грузится один раз. Каждый потребитель получает свою геометрию (со своими цветами),
+// а позиции, нормали и линии — общие.
+let baseP = null;
+export function loadBody() {
+  baseP ||= Promise.all([
+    fetch(new URL('body.json', MODEL_URL)).then((r) => r.json()),
+    fetch(new URL('body.bin', MODEL_URL)).then((r) => r.arrayBuffer()),
+  ]).then(([meta, buf]) => {
+    const [oPos, oIdx, oG, oC, oL, , oIn] = meta.offsets;
+    const nv = meta.vertices;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, oPos, nv * 3), 3));
+    g.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, oIdx, meta.indices), 1));
+    g.setAttribute('aEdge', new THREE.BufferAttribute(new Uint8Array(buf, oL, nv), 1, true));
+    g.setAttribute('aInner', new THREE.BufferAttribute(oIn !== undefined ? new Uint8Array(buf, oIn, nv) : new Uint8Array(nv), 1, true));
+    g.computeVertexNormals();
+    g.computeBoundingBox();
+    return {
+      base: g, nv,
+      groups: Array.from(new Uint8Array(buf, oG, nv), (i) => meta.groups[i]),
+      colorKeys: Array.from(new Uint8Array(buf, oC, nv), (i) => meta.colors[i]),
+    };
+  });
+  return baseP.then((b) => {
+    const g = new THREE.BufferGeometry();
+    for (const k of ['position', 'normal', 'aEdge', 'aInner']) g.setAttribute(k, b.base.getAttribute(k));
+    g.setIndex(b.base.index);
+    g.boundingBox = b.base.boundingBox.clone();
+    const colors = new Float32Array(b.nv * 3);
+    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    return { geometry: g, colors, groups: b.groups, colorKeys: b.colorKeys };
+  });
+}
+
+export function addLights(scene) {
+  scene.add(new THREE.HemisphereLight(0xe8edff, 0x1a1d2a, 1.3));
+  const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(1.0, 2.6, 3.2); scene.add(key);
+  const back = new THREE.DirectionalLight(0xffffff, 0.5); back.position.set(-1.2, 2.0, -3.0); scene.add(back);
+}
+
 
 export function createAnatomy3D(host, { onSelect, light = false } = {}) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -44,28 +117,7 @@ export function createAnatomy3D(host, { onSelect, light = false } = {}) {
   controls.screenSpacePanning = true;
   controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
-  scene.add(new THREE.HemisphereLight(0xe8edff, 0x1a1d2a, 1.3));
-  const key = new THREE.DirectionalLight(0xffffff, 1.25); key.position.set(1.0, 2.6, 3.2); scene.add(key);
-  const back = new THREE.DirectionalLight(0xffffff, 0.5); back.position.set(-1.2, 2.0, -3.0); scene.add(back);
-
-  // ---------- линии мышц в шейдере ----------
-  const lineU = { uLineOn: { value: 1 }, uLineT: { value: 0.76 }, uLineC: { value: new THREE.Color('#14161c') } };
-  const withLines = (mat) => {
-    mat.onBeforeCompile = (sh) => {
-      Object.assign(sh.uniforms, lineU);
-      sh.vertexShader = sh.vertexShader
-        .replace('#include <common>', '#include <common>\nattribute float aEdge;\nattribute float aInner;\nvarying float vEdge;\nvarying float vInner;')
-        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvEdge = aEdge;\nvInner = aInner;');
-      sh.fragmentShader = sh.fragmentShader
-        .replace('#include <common>', '#include <common>\nuniform float uLineOn;\nuniform float uLineT;\nuniform vec3 uLineC;\nvarying float vEdge;\nvarying float vInner;')
-        .replace('#include <color_fragment>', `#include <color_fragment>
-          float we = max(fwidth(vEdge), 0.0001);
-          float le = smoothstep(uLineT - we, uLineT + we, vEdge);
-          // границы мышц — тёмные, рельеф внутри мышцы — светлее (наполовину к цвету мышцы)
-          vec3 lc = mix(uLineC, diffuseColor.rgb, 0.55 * vInner);
-          diffuseColor.rgb = mix(diffuseColor.rgb, lc, le * uLineOn);`);
-    };
-  };
+  addLights(scene);
 
   let mesh = null, outline = null, groups = null, colorKeys = null, colors = null;
   let state = { primary: [], secondary: [], planned: [] }, hovered = null, style = 'line', heat = null;
@@ -98,32 +150,12 @@ export function createAnatomy3D(host, { onSelect, light = false } = {}) {
     mesh.geometry.attributes.color.needsUpdate = true;
   }
 
-  const ready = Promise.all([
-    fetch(new URL('body.json', MODEL_URL)).then((r) => r.json()),
-    fetch(new URL('body.bin', MODEL_URL)).then((r) => r.arrayBuffer()),
-  ]).then(([meta, buf]) => {
-    const [oPos, oIdx, oG, oC, oL, , oIn] = meta.offsets;
-    const nv = meta.vertices;
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(buf, oPos, nv * 3), 3));
-    g.setIndex(new THREE.BufferAttribute(new Uint32Array(buf, oIdx, meta.indices), 1));
-    g.setAttribute('aEdge', new THREE.BufferAttribute(new Uint8Array(buf, oL, nv), 1, true));
-    g.setAttribute('aInner', new THREE.BufferAttribute(oIn !== undefined ? new Uint8Array(buf, oIn, nv) : new Uint8Array(nv), 1, true));
-    g.computeVertexNormals();
-    groups = Array.from(new Uint8Array(buf, oG, nv), (i) => meta.groups[i]);
-    colorKeys = Array.from(new Uint8Array(buf, oC, nv), (i) => meta.colors[i]);
-    colors = new Float32Array(nv * 3);
-    g.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const steps = new Uint8Array([150, 196, 232, 255]);
-    const grad = new THREE.DataTexture(steps, 4, 1, THREE.RedFormat);
-    grad.minFilter = grad.magFilter = THREE.NearestFilter; grad.needsUpdate = true;
-    const mat = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: grad });
-    withLines(mat);
-    mesh = new THREE.Mesh(g, mat);
+  const ready = loadBody().then((m) => {
+    groups = m.groups; colorKeys = m.colorKeys; colors = m.colors;
+    const { mat, om } = bodyMaterials();
+    mesh = new THREE.Mesh(m.geometry, mat);
     scene.add(mesh);
-    const om = new THREE.MeshBasicMaterial({ color: 0x14161c, side: THREE.BackSide });
-    om.onBeforeCompile = (sh) => { sh.vertexShader = sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = position + normal * 0.0024;'); };
-    outline = new THREE.Mesh(g, om);
+    outline = new THREE.Mesh(m.geometry, om);
     scene.add(outline);
     paint();
   });

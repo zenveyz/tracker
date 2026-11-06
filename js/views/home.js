@@ -1,6 +1,6 @@
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
-import { miniBodies } from '../body.js';
+import { bodySnapsHTML } from '../bodysnap.js';
 import { MUSCLES, findExercise } from '../data/exercises.js';
 import { esc, fmt, ring, longDate, dateKey, weekdayIdx, clamp, plural, fmtClock, toast } from '../ui.js';
 import { dayItems, isDone, muscleLoad, loadFills } from './workouts.js';
@@ -76,7 +76,7 @@ export function render(root) {
           <span class="dc-more">${icon('chevR', 18)}</span></div>
         ${items.length ? `
           <div class="row" style="align-items:center;gap:16px">
-            <div style="flex:none">${miniBodies(loadFills(muscleLoad(items)), { labels: false })}</div>
+            <div style="flex:none">${bodySnapsHTML(muscleLoad(items), { fills: loadFills(muscleLoad(items)) })}</div>
             <div class="grow stack" style="gap:8px">
               ${muscles.map((m) => `<span class="badge accent" style="align-self:flex-start">${MUSCLES[m].emoji} ${MUSCLES[m].name}</span>`).join('')}
               <div class="bar thin" style="margin-top:6px"><i style="width:${(doneN / items.length) * 100}%"></i></div>

@@ -7,6 +7,7 @@ import { bodyViewHTML, initBodyView } from '../bodyview.js';
 import { workoutHeat, trainedItems } from '../stats.js';
 import { heatRange, eachDay } from '../heatmap.js';
 import { requirePremium, isPremium, lockedHTML } from '../premium.js';
+import { bodySnapsHTML } from '../bodysnap.js';
 import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, DAY_SHORT, DAY_FULL, weekDates, weekdayIdx, dateKey, confirmSheet, confetti } from '../ui.js';
 
 // ---------- локальное состояние экрана ----------
@@ -356,7 +357,7 @@ function weekTab() {
           ${items.length ? `<span class="badge">${doneN}/${items.length}</span>` : ''}
         </div>
         ${items.length ? `
-        <div style="margin:16px 0 6px">${miniBodies(loadFills(load))}</div>
+        <div style="margin:16px 0 6px">${bodySnapsHTML(load, { fills: loadFills(load) })}</div>
         <div class="plan-stats">
           <div class="plan-stat"><b>${items.length}</b><span>упражнений</span></div>
           <div class="plan-stat"><b>${sets}</b><span>подходов</span></div>
@@ -381,7 +382,7 @@ function weekTab() {
       </div>
       ${all.length ? `
       <div class="grid grid-dash" style="margin-top:20px;align-items:center">
-        <div>${miniBodies(loadFills(wLoad), { lg: true })}</div>
+        <div>${bodySnapsHTML(wLoad, { size: 'lg', fills: loadFills(wLoad) })}</div>
         <div class="stack" style="gap:10px">
           ${ranked.map(([m, v]) => `<div class="heat-row"><span class="${v ? '' : 'faint'}">${MUSCLES[m].name}</span>
             <div class="bar"><i style="width:${(v / maxLoad) * 100}%"></i></div><span class="num small ${v ? '' : 'faint'}" style="text-align:right">${v ? fmt(v, 1) : '—'}</span></div>`).join('')}
