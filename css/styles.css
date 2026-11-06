@@ -818,3 +818,14 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .snap-pair.xs { --h: 140px; }
 .snap-pair.day { --h: 120px; gap: 2px; margin: 6px 0; }
 .ex-expand .snap-pair { justify-content: flex-start; }
+
+/* планы Премиума */
+.pw-plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+.pw-plan { position: relative; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 16px 6px 12px; border-radius: 16px; background: var(--surface); border: 1.5px solid var(--border); text-align: center; transition: border-color .2s, background .2s; }
+.pw-plan.on { border-color: var(--a1); background: color-mix(in srgb, var(--a1) 12%, transparent); }
+.pw-plan .pw-pt { font-size: 13px; font-weight: 700; color: var(--muted); }
+.pw-plan .pw-pt i { font-style: normal; color: #22c55e; font-weight: 800; }
+.pw-plan b { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; margin-top: 2px; }
+.pw-plan .pw-per { font-size: 12px; color: var(--muted); }
+.pw-plan .pw-note { font-size: 10.5px; color: var(--faint); line-height: 1.3; margin-top: 4px; }
+.pw-pop { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); }

@@ -1,7 +1,7 @@
-// Kosmic Премиум (разовая покупка): окно «Купите Премиум», ввод ключа и его проверка.
+// Kosmic Премиум: окно с планами (месяц / год / навсегда), ввод ключа и его проверка.
 //
 // Как это работает:
-//  1. Кнопка «Купить» открывает страницу оплаты платёжного сервиса (CONFIG.checkoutUrl).
+//  1. Кнопка «Купить» открывает страницу оплаты выбранного плана (CONFIG.plans[].checkoutUrl).
 //  2. После оплаты сервис присылает покупателю ключ (license key) на почту.
 //  3. Пользователь вводит ключ здесь → приложение спрашивает сервер проверки (CONFIG.verifyUrl),
 //     действует ли ключ. Сервер — server/premium-worker.js (Cloudflare Worker).
@@ -13,9 +13,12 @@ import { icon } from './icons.js';
 
 // ======== НАСТРОЙКИ (заполни, когда будет аккаунт в платёжном сервисе) ========
 export const CONFIG = {
-  price: '10 $',              // цена, которую видит пользователь
-  period: 'навсегда',
-  checkoutUrl: '',            // ссылка на оплату (страница товара «Премиум» в платёжном сервисе)
+  // три плана; checkoutUrl — ссылка на оплату этого товара в платёжном сервисе
+  plans: [
+    { id: 'month', title: 'Месяц', price: '2,99 $', per: 'в месяц', note: 'первые 7 дней бесплатно', trialDays: 7, checkoutUrl: '' },
+    { id: 'year', title: 'Год', price: '19,99 $', per: 'в год', note: '≈ 1,67 $ в месяц', badge: '−45%', popular: true, checkoutUrl: '' },
+    { id: 'life', title: 'Навсегда', price: '24,99 $', per: 'один раз', note: 'без подписки и продлений', checkoutUrl: '' },
+  ],
   verifyUrl: '',              // адрес сервера проверки ключей, напр. https://kosmic-premium.ТВОЙ.workers.dev
 };
 // ===============================================================================
@@ -49,7 +52,7 @@ export const FEATURES = [
   ['💪', 'Свои упражнения', 'добавляй любые упражнения в базу и в план'],
   ['📈', 'Прогресс', 'календари за месяц и год, история тренировок и нагрузка на мышцы'],
   ['✨', 'Будущие функции', 'всё новое, что появится в Премиуме'],
-  ['❤️', 'Поддержка Kosmic', 'приложение развивается на твою покупку'],
+  ['❤️', 'Поддержка Kosmic', 'приложение развивается благодаря тебе'],
 ];
 
 export function isPremium(s = getState()) {
@@ -126,7 +129,7 @@ export function premiumCardHTML() {
   }
   return `<div class="card pad-lg stack premium-card">
     <div class="bold">👑 Kosmic Премиум</div>
-    <div class="muted small">${CONFIG.price} ${CONFIG.period} · свои упражнения и будущие функции</div>
+    <div class="muted small">от ${CONFIG.plans[0].price} в месяц · 7 дней бесплатно · свои упражнения, прогресс и будущие функции</div>
     <button class="btn btn-primary" data-premium-open>${icon('sparkles', 18)} Подробнее</button>
   </div>`;
 }
@@ -139,8 +142,15 @@ export function paywall(feature) {
     body: `
       ${feature ? `<div class="pw-lock">${icon('bolt', 16)} «${esc(feature)}» доступно в Премиуме</div>` : ''}
       <div class="pw-list">${FEATURES.map(([e, t, d]) => `<div class="pw-item"><span>${e}</span><div><b>${t}</b><div class="muted small">${d}</div></div></div>`).join('')}</div>
-      <div class="pw-price"><b>${CONFIG.price}</b> <span class="muted">${CONFIG.period}</span><div class="tiny faint">одна оплата — без подписки и продлений</div></div>
-      <button class="btn btn-primary btn-block" data-buy>${icon('sparkles', 18)} Купить Премиум</button>
+      <div class="pw-plans">${CONFIG.plans.map((p) => `
+        <button type="button" class="pw-plan ${p.popular ? 'on' : ''}" data-plan="${p.id}">
+          ${p.popular ? '<span class="pw-pop">Популярный</span>' : ''}
+          <span class="pw-pt">${p.title}${p.badge ? ` <i>${p.badge}</i>` : ''}</span>
+          <b>${p.price}</b><span class="pw-per">${p.per}</span>
+          <span class="pw-note">${p.note}</span>
+        </button>`).join('')}</div>
+      <button class="btn btn-primary btn-block" data-buy>${icon('sparkles', 18)} <span data-buy-label></span></button>
+      <div class="tiny faint" style="text-align:center;margin-top:-6px">Подписку можно отменить в любой момент по ссылке из письма</div>
       <div class="pw-or"><span>уже купил?</span></div>
       <div class="row" style="gap:8px">
         <input class="input" name="key" placeholder="Ключ из письма" autocomplete="off" spellcheck="false" style="flex:1" />
@@ -155,9 +165,18 @@ export function paywall(feature) {
         </div>
       </div>`,
     onMount: (el) => {
+      let plan = CONFIG.plans.find((p) => p.popular) || CONFIG.plans[0];
+      const label = el.querySelector('[data-buy-label]');
+      const pick = (p) => {
+        plan = p;
+        el.querySelectorAll('[data-plan]').forEach((b) => b.classList.toggle('on', b.dataset.plan === p.id));
+        label.textContent = p.trialDays ? `Попробовать ${p.trialDays} дней бесплатно` : p.id === 'life' ? `Купить навсегда за ${p.price}` : `Оформить за ${p.price} ${p.per}`;
+      };
+      pick(plan);
+      el.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => pick(CONFIG.plans.find((p) => p.id === b.dataset.plan))));
       el.querySelector('[data-buy]').addEventListener('click', () => {
-        if (!CONFIG.checkoutUrl) { toast('Оплата скоро появится', '⏳'); return; }
-        window.open(CONFIG.checkoutUrl, '_blank', 'noopener');
+        if (!plan.checkoutUrl) { toast('Оплата скоро появится', '⏳'); return; }
+        window.open(plan.checkoutUrl, '_blank', 'noopener');
       });
       const go = async () => {
         const btn = el.querySelector('[data-activate]');

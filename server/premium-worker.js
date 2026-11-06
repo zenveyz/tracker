@@ -5,7 +5,7 @@
 // Развёртывание (см. server/README.md):
 //   переменные окружения Worker:
 //     STORE_ID        — id магазина в Lemon Squeezy (число)
-//     PRODUCT_ID      — id товара «Kosmic Премиум» (число)
+//     PRODUCT_IDS     — id товаров Премиума через запятую (месяц, год, навсегда), напр. 101,102,103
 //     ALLOWED_ORIGIN  — адрес сайта, напр. https://zenveyz.github.io
 //
 // Секретные ключи API здесь не нужны: проверка лицензии в Lemon Squeezy работает по самому ключу.
@@ -23,7 +23,8 @@ async function checkKey(key, env) {
   const lic = data.license_key || {}, meta = data.meta || {};
   // ключ должен быть именно от нашего магазина и нашего товара
   if (!data.valid && !lic.status) return { valid: false, reason: 'unknown' };
-  if (String(meta.store_id) !== String(env.STORE_ID) || String(meta.product_id) !== String(env.PRODUCT_ID)) {
+  const products = String(env.PRODUCT_IDS || env.PRODUCT_ID || '').split(',').map((x) => x.trim());
+  if (String(meta.store_id) !== String(env.STORE_ID) || !products.includes(String(meta.product_id))) {
     return { valid: false, reason: 'unknown' };
   }
   const expiresAt = lic.expires_at ? Date.parse(lic.expires_at) : null;
