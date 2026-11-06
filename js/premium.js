@@ -150,7 +150,7 @@ export function paywall(feature) {
           <b>${p.price}</b><span class="pw-per">${p.per}</span>
           <span class="pw-note">${p.note}</span>
         </button>`).join('')}</div>
-      <button class="btn btn-primary btn-block" data-buy>${icon('sparkles', 18)} <span data-buy-label></span></button>
+      <a class="btn btn-primary btn-block" data-buy href="#" target="_blank" rel="noopener">${icon('sparkles', 18)} <span data-buy-label></span></a>
       <div class="tiny faint" style="text-align:center;margin-top:-6px">Подписку можно отменить в любой момент по ссылке из письма</div>
       <div class="pw-or"><span>уже купил?</span></div>
       <div class="row" style="gap:8px">
@@ -171,13 +171,14 @@ export function paywall(feature) {
       const pick = (p) => {
         plan = p;
         el.querySelectorAll('[data-plan]').forEach((b) => b.classList.toggle('on', b.dataset.plan === p.id));
+        // обычная ссылка, а не window.open: так страница оплаты открывается и в приложении на экране «Домой» (iPhone)
+        el.querySelector('[data-buy]').href = p.checkoutUrl || '#';
         label.textContent = p.trialDays ? `Попробовать ${p.trialDays} дней бесплатно` : p.id === 'life' ? `Купить навсегда за ${p.price}` : `Оформить за ${p.price} ${p.per}`;
       };
       pick(plan);
       el.querySelectorAll('[data-plan]').forEach((b) => b.addEventListener('click', () => pick(CONFIG.plans.find((p) => p.id === b.dataset.plan))));
-      el.querySelector('[data-buy]').addEventListener('click', () => {
-        if (!plan.checkoutUrl) { toast('Оплата скоро появится', '⏳'); return; }
-        window.open(plan.checkoutUrl, '_blank', 'noopener');
+      el.querySelector('[data-buy]').addEventListener('click', (e) => {
+        if (!plan.checkoutUrl) { e.preventDefault(); toast('Оплата скоро появится', '⏳'); }
       });
       const go = async () => {
         const btn = el.querySelector('[data-activate]');
