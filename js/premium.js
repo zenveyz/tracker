@@ -1,11 +1,11 @@
-// Kosmic Премиум: окно «Купите Премиум», ввод ключа и проверка подписки.
+// Kosmic Премиум (разовая покупка): окно «Купите Премиум», ввод ключа и его проверка.
 //
 // Как это работает:
 //  1. Кнопка «Купить» открывает страницу оплаты платёжного сервиса (CONFIG.checkoutUrl).
 //  2. После оплаты сервис присылает покупателю ключ (license key) на почту.
 //  3. Пользователь вводит ключ здесь → приложение спрашивает сервер проверки (CONFIG.verifyUrl),
-//     активна ли подписка. Сервер — server/premium-worker.js (Cloudflare Worker).
-//  4. Раз в сутки статус перепроверяется: если подписку отменили — премиум выключится.
+//     действует ли ключ. Сервер — server/premium-worker.js (Cloudflare Worker).
+//  4. Раз в сутки статус перепроверяется: если ключ отозван (возврат денег) — премиум выключится.
 //     Без интернета премиум продолжает работать до 7 дней с последней проверки.
 import { getState, update } from './store.js';
 import { openSheet, closeSheet, toast, esc } from './ui.js';
@@ -13,8 +13,8 @@ import { icon } from './icons.js';
 
 // ======== НАСТРОЙКИ (заполни, когда будет аккаунт в платёжном сервисе) ========
 export const CONFIG = {
-  price: '2,99 $',            // цена, которую видит пользователь
-  period: 'в месяц',
+  price: '10 $',              // цена, которую видит пользователь
+  period: 'навсегда',
   checkoutUrl: '',            // ссылка на оплату (страница товара «Премиум» в платёжном сервисе)
   verifyUrl: '',              // адрес сервера проверки ключей, напр. https://kosmic-premium.ТВОЙ.workers.dev
 };
@@ -48,7 +48,7 @@ export async function redeemPromo(code) {
 export const FEATURES = [
   ['💪', 'Свои упражнения', 'добавляй любые упражнения в базу и в план'],
   ['✨', 'Будущие функции', 'всё новое, что появится в Премиуме'],
-  ['❤️', 'Поддержка Kosmic', 'приложение развивается на твою подписку'],
+  ['❤️', 'Поддержка Kosmic', 'приложение развивается на твою покупку'],
 ];
 
 export function isPremium(s = getState()) {
@@ -119,7 +119,7 @@ export function premiumCardHTML() {
     return `<div class="card pad-lg stack premium-card on">
       <div class="row between"><div class="bold">👑 Kosmic Премиум</div><span class="pill-on">активен</span></div>
       <div class="muted small" style="line-height:1.5">Ключ: <span class="num">${esc(maskKey(p.key))}</span>${p.expiresAt ? ` · до ${new Date(p.expiresAt).toLocaleDateString('ru-RU')}` : ''}${p.test ? ' · тестовый' : ''}${p.promo ? ' · промокод, бессрочно' : ''}</div>
-      <div class="tiny faint">Отменить подписку можно по ссылке из письма об оплате. Чтобы включить Премиум на другом устройстве, введи там этот же ключ.</div>
+      <div class="tiny faint">Чтобы включить Премиум на другом устройстве, введи там этот же ключ.</div>
       <button class="btn" data-premium-off>Выйти из Премиума на этом устройстве</button>
     </div>`;
   }
@@ -138,7 +138,7 @@ export function paywall(feature) {
     body: `
       ${feature ? `<div class="pw-lock">${icon('bolt', 16)} «${esc(feature)}» доступно в Премиуме</div>` : ''}
       <div class="pw-list">${FEATURES.map(([e, t, d]) => `<div class="pw-item"><span>${e}</span><div><b>${t}</b><div class="muted small">${d}</div></div></div>`).join('')}</div>
-      <div class="pw-price"><b>${CONFIG.price}</b> <span class="muted">${CONFIG.period}</span><div class="tiny faint">отмена в любой момент</div></div>
+      <div class="pw-price"><b>${CONFIG.price}</b> <span class="muted">${CONFIG.period}</span><div class="tiny faint">одна оплата — без подписки и продлений</div></div>
       <button class="btn btn-primary btn-block" data-buy>${icon('sparkles', 18)} Купить Премиум</button>
       <div class="pw-or"><span>уже купил?</span></div>
       <div class="row" style="gap:8px">
