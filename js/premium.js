@@ -26,6 +26,25 @@ const OFFLINE_GRACE = 7 * DAY;
 const isLocal = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
 const TEST_KEY = 'TEST-PREMIUM'; // работает только на localhost, для проверки окна
 
+// Промокоды: здесь хранится только SHA-256 хеш, сам код в репозитории не виден.
+// Новый код: node -e "console.log(require('crypto').createHash('sha256').update('МОЙ-КОД').digest('hex'))"
+// и добавь хеш в список. Чтобы отключить код — удали его хеш.
+const PROMO_HASHES = [
+  'e8dfcc3ec8046b7b7fb48b8e1eea04f8d52f4ab1eaa2af468d7a2fbbab49408d', // промокод владельца
+];
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+export async function redeemPromo(code) {
+  code = code.trim().toUpperCase();
+  if (!code) { toast('Введи промокод', '🎟️'); return false; }
+  if (!PROMO_HASHES.includes(await sha256(code))) { toast('Промокод не подошёл', '⚠️'); return false; }
+  update((s) => { s.premium = { key: code, active: true, checkedAt: Date.now(), expiresAt: null, promo: true }; });
+  toast('Премиум включён по промокоду', '🎟️');
+  return true;
+}
+
 export const FEATURES = [
   ['💪', 'Свои упражнения', 'добавляй любые упражнения в базу и в план'],
   ['✨', 'Будущие функции', 'всё новое, что появится в Премиуме'],
@@ -36,7 +55,7 @@ export function isPremium(s = getState()) {
   const p = s.premium;
   if (!p?.active || !p.key) return false;
   if (p.expiresAt && Date.now() > p.expiresAt) return false;
-  return Date.now() - (p.checkedAt || 0) < OFFLINE_GRACE;
+  return p.promo || Date.now() - (p.checkedAt || 0) < OFFLINE_GRACE;
 }
 
 // Обёртка для платных функций: если премиум есть — выполняет действие, иначе показывает окно.
@@ -85,7 +104,7 @@ export function deactivate() {
 // Фоновая перепроверка подписки (вызывается при запуске приложения).
 export async function recheck() {
   const p = getState().premium;
-  if (!p?.key || p.test || !navigator.onLine) return;
+  if (!p?.key || p.test || p.promo || !navigator.onLine) return;
   if (Date.now() - (p.checkedAt || 0) < RECHECK) return;
   try {
     const res = await verify(p.key);
@@ -99,7 +118,7 @@ export function premiumCardHTML() {
   if (on) {
     return `<div class="card pad-lg stack premium-card on">
       <div class="row between"><div class="bold">👑 Kosmic Премиум</div><span class="pill-on">активен</span></div>
-      <div class="muted small" style="line-height:1.5">Ключ: <span class="num">${esc(maskKey(p.key))}</span>${p.expiresAt ? ` · до ${new Date(p.expiresAt).toLocaleDateString('ru-RU')}` : ''}${p.test ? ' · тестовый' : ''}</div>
+      <div class="muted small" style="line-height:1.5">Ключ: <span class="num">${esc(maskKey(p.key))}</span>${p.expiresAt ? ` · до ${new Date(p.expiresAt).toLocaleDateString('ru-RU')}` : ''}${p.test ? ' · тестовый' : ''}${p.promo ? ' · промокод, бессрочно' : ''}</div>
       <div class="tiny faint">Отменить подписку можно по ссылке из письма об оплате. Чтобы включить Премиум на другом устройстве, введи там этот же ключ.</div>
       <button class="btn" data-premium-off>Выйти из Премиума на этом устройстве</button>
     </div>`;
@@ -126,7 +145,14 @@ export function paywall(feature) {
         <input class="input" name="key" placeholder="Ключ из письма" autocomplete="off" spellcheck="false" style="flex:1" />
         <button class="btn" data-activate>Активировать</button>
       </div>
-      <div class="tiny faint" style="line-height:1.5">Оплата проходит на защищённой странице платёжного сервиса — данные карты в Kosmic не попадают. После оплаты ключ придёт на почту.</div>`,
+      <div class="tiny faint" style="line-height:1.5">Оплата проходит на защищённой странице платёжного сервиса — данные карты в Kosmic не попадают. После оплаты ключ придёт на почту.</div>
+      <div class="pw-promo">
+        <button class="link-btn" data-promo-toggle>🎟️ Есть промокод?</button>
+        <div class="row" data-promo-row hidden style="gap:8px">
+          <input class="input" name="promo" placeholder="Промокод" autocomplete="off" spellcheck="false" style="flex:1;text-transform:uppercase" />
+          <button class="btn" data-promo>Применить</button>
+        </div>
+      </div>`,
     onMount: (el) => {
       el.querySelector('[data-buy]').addEventListener('click', () => {
         if (!CONFIG.checkoutUrl) { toast('Оплата скоро появится', '⏳'); return; }
@@ -141,6 +167,14 @@ export function paywall(feature) {
       };
       el.querySelector('[data-activate]').addEventListener('click', go);
       el.querySelector('[name=key]').addEventListener('keydown', (e) => { if (e.key === 'Enter') go(); });
+      const promoRow = el.querySelector('[data-promo-row]');
+      el.querySelector('[data-promo-toggle]').addEventListener('click', () => {
+        promoRow.hidden = !promoRow.hidden;
+        if (!promoRow.hidden) promoRow.querySelector('input').focus();
+      });
+      const usePromo = async () => { if (await redeemPromo(el.querySelector('[name=promo]').value)) closeSheet(); };
+      el.querySelector('[data-promo]').addEventListener('click', usePromo);
+      el.querySelector('[name=promo]').addEventListener('keydown', (e) => { if (e.key === 'Enter') usePromo(); });
     },
   });
 }

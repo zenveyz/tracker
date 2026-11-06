@@ -794,3 +794,7 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .pw-or::before, .pw-or::after { content: ''; flex: 1; height: 1px; background: var(--border-2); }
 .premium-card { border: 1px solid color-mix(in srgb, var(--a1) 45%, transparent); }
 .premium-card .pill-on { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: #22c55e22; color: #22c55e; }
+.pw-promo { display: flex; flex-direction: column; align-items: center; gap: 10px; border-top: 1px solid var(--border-2); padding-top: 12px; }
+.pw-promo .row { width: 100%; }
+.link-btn { background: none; border: 0; color: var(--muted, #8b93a7); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.link-btn:hover { color: var(--text, #fff); }
