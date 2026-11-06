@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>Макет: 3D-тело</title>
+  <script type="importmap">
+    { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+    } }
+  </script>
+  <style>
+    :root { --bg: #0a0c13; --panel: rgba(255,255,255,.045); --border: rgba(255,255,255,.08); --text: #eef1f8; --muted: #8f97ad; --a1: #ff8a4c; --a2: #ff4d6d; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-family: Inter, -apple-system, "Segoe UI", Roboto, sans-serif; -webkit-font-smoothing: antialiased; }
+    body { display: grid; grid-template-columns: 1fr 340px; min-height: 100dvh; }
+    .stage { position: relative; min-height: 100dvh; background: radial-gradient(70% 60% at 50% 38%, rgba(255,138,76,.12), transparent 70%), radial-gradient(50% 30% at 50% 100%, rgba(255,255,255,.04), transparent 70%); overflow: hidden; }
+    canvas { display: block; width: 100% !important; height: 100% !important; touch-action: none; outline: none; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    .badge { position: absolute; left: 18px; top: 16px; font-size: 12px; font-weight: 800; letter-spacing: .12em; color: var(--muted); }
+    .tools { position: absolute; right: 14px; top: 14px; display: flex; flex-direction: column; gap: 8px; }
+    .tools button, .seg button { font: inherit; color: var(--text); border: 1px solid var(--border); background: rgba(16,19,29,.6); backdrop-filter: blur(10px); border-radius: 12px; cursor: pointer; }
+    .tools button { width: 40px; height: 40px; font-size: 18px; font-weight: 700; }
+    .seg { position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%); display: flex; gap: 6px; padding: 5px; border-radius: 16px; background: rgba(16,19,29,.6); border: 1px solid var(--border); backdrop-filter: blur(10px); }
+    .seg button { border: 0; background: none; padding: 9px 16px; font-weight: 700; font-size: 13.5px; color: var(--muted); }
+    .seg button.on { background: rgba(255,255,255,.12); color: var(--text); }
+    .tip { position: absolute; pointer-events: none; padding: 6px 10px; border-radius: 10px; background: rgba(16,19,29,.85); border: 1px solid var(--border); font-size: 12.5px; font-weight: 700; transform: translate(-50%, -140%); white-space: nowrap; opacity: 0; transition: opacity .15s; }
+    .loader { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; color: var(--muted); font-weight: 600; font-size: 14px; }
+    .spin { width: 38px; height: 38px; border-radius: 50%; border: 3px solid rgba(255,255,255,.1); border-top-color: var(--a1); animation: s .9s linear infinite; }
+    @keyframes s { to { transform: rotate(360deg); } }
+    aside { border-left: 1px solid var(--border); padding: 24px 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; max-height: 100dvh; }
+    h1 { margin: 0; font-size: 24px; letter-spacing: -0.03em; }
+    .sub { color: var(--muted); font-size: 13.5px; line-height: 1.5; margin-top: 6px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 18px; padding: 16px; }
+    .sel-name { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
+    .sel-sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
+    .list { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .list button { font: inherit; text-align: left; padding: 10px 11px; border-radius: 12px; border: 1px solid var(--border); background: var(--panel); color: var(--text); font-size: 13px; font-weight: 650; cursor: pointer; display: flex; gap: 8px; align-items: center; transition: .2s; }
+    .list button i { width: 8px; height: 8px; border-radius: 50%; background: #9aa1b2; flex: none; }
+    .list button.on { background: linear-gradient(135deg, var(--a1), var(--a2)); border-color: transparent; }
+    .list button.on i { background: #fff; }
+    .note { font-size: 12.5px; color: var(--muted); line-height: 1.55; }
+    label.row { display: flex; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+    .styles { display: flex; gap: 4px; padding: 4px; border-radius: 14px; background: var(--panel); border: 1px solid var(--border); }
+    .styles button { flex: 1; font: inherit; font-size: 13px; font-weight: 700; padding: 9px 6px; border: 0; border-radius: 10px; background: none; color: var(--muted); cursor: pointer; }
+    .styles button.on { background: rgba(255,255,255,.12); color: var(--text); }
+    body.light .stage { background: radial-gradient(70% 60% at 50% 40%, #ffffff, #e9eaee 75%); }
+    body.light .badge { color: #8a8f9c; }
+    body.light .seg, body.light .tools button { background: rgba(255,255,255,.75); color: #1b1e27; border-color: rgba(0,0,0,.08); }
+    body.light .seg button { color: #6b7080; }
+    body.light .seg button.on { background: #1b1e27; color: #fff; }
+    @media (max-width: 860px) {
+      body { grid-template-columns: 1fr; }
+      .stage { min-height: 68dvh; height: 68dvh; }
+      aside { border-left: 0; border-top: 1px solid var(--border); max-height: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stage" id="stage">
+    <div class="badge">МАКЕТ · 3D-ТЕЛО</div>
+    <div class="loader" id="loader"><div class="spin"></div><span>Леплю модель…</span></div>
+    <div class="tools">
+      <button data-z="0.8" title="Приблизить">+</button>
+      <button data-z="1.25" title="Отдалить">−</button>
+      <button data-reset title="Сбросить вид">⟲</button>
+    </div>
+    <div class="seg"><button data-face="front" class="on">Спереди</button><button data-face="back">Сзади</button><button data-face="side">Сбоку</button></div>
+    <div class="tip" id="tip"></div>
+  </div>
+  <aside>
+    <div>
+      <h1>3D-тело · макет</h1>
+      <div class="sub">Крути одним пальцем или мышью, приближай щипком или колёсиком, двигай двумя пальцами или правой кнопкой. Нажми на мышцу, чтобы выбрать.</div>
+    </div>
+    <div class="card">
+      <div class="sel-name" id="selName">Мышца не выбрана</div>
+      <div class="sel-sub" id="selSub">Нажми на тело или выбери из списка</div>
+    </div>
+    <div class="list" id="list"></div>
+    <label class="row"><input type="checkbox" id="lines" checked /> Показывать границы мышц</label>
+    <div class="styles"><button data-style="line" class="on">Как на фото</button><button data-style="color">Цвета</button><button data-style="sculpt">Объём</button></div>
+    <div class="note" id="stat"></div>
+  </aside>
+  <script type="module" src="./mockup.js?v=24"></script>
+</body>
+</html>

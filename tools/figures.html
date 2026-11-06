@@ -1,0 +1,11 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../css/styles.css">
+<style>.big .g{grid-template-columns:repeat(3,1fr)} .big .c svg{height:170px} body{padding:16px} .g{display:grid;grid-template-columns:repeat(5,1fr);gap:8px} .c{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:4px;font-size:10px;text-align:center} .c svg{height:90px;width:48%;display:inline-block}</style></head>
+<body><div class="g" id="g"></div>
+<script type="module">
+import { EXERCISES } from '../js/data/exercises.js';
+import { exerciseFigure } from '../js/figure.js';
+const ks = new URLSearchParams(location.search).get('k');
+const g = document.getElementById('g'); if(new URLSearchParams(location.search).get('big')) document.body.classList.add('big');
+const list = EXERCISES.slice(+(new URLSearchParams(location.search).get('from')||0), +(new URLSearchParams(location.search).get('to')||99));
+g.innerHTML = list.map(e => `<div class="c">${exerciseFigure(e,{still:0.001})}${exerciseFigure(e,{still:1})}<div>${e.name}</div></div>`).join('');
+</script></body></html>

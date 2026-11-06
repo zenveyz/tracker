@@ -1,0 +1,4 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><link rel="stylesheet" href="../css/styles.css"><style>body{display:flex;gap:20px;padding:10px;justify-content:center}svg{height:95vh}</style></head><body><div id="a"></div><div id="b"></div>
+<script type="module">import { bodySVG, ensureBodyDefs } from '../js/body.js'; ensureBodyDefs();
+const p=new URLSearchParams(location.search); const sel=p.get('sel');
+a.innerHTML=bodySVG('front',{interactive:true, selected: sel}); b.innerHTML=bodySVG('back',{interactive:true, selected: sel});</script></body></html>

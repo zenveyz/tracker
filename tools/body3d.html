@@ -1,0 +1,10 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="../css/styles.css">
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/" } }</script>
+<style>#h{width:100vw;height:100vh}</style></head><body><div id="h"></div>
+<script type="module">
+import { createBody3D } from '../js/body3d.js';
+const p = new URLSearchParams(location.search);
+window.b = createBody3D(document.getElementById('h'), { onSelect: (m) => { console.log('pick', m); window.b.set({ primary: m ? [m] : [] }); } });
+if (p.get('back')) setTimeout(() => window.b.face('back'), 100);
+if (p.get('hl')) window.b.set({ primary: [p.get('hl')], secondary: ['triceps','shoulders'] });
+</script></body></html>
