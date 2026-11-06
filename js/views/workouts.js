@@ -1,6 +1,6 @@
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
-import { bodySVG, miniBodies, heatColor } from '../body.js';
+import { heatColor } from '../body.js';
 import { MUSCLES, MUSCLE_ORDER, EXERCISES, EQUIP_EMOJI, findExercise } from '../data/exercises.js';
 import { exerciseFigure, animateFigures } from '../figure.js';
 import { bodyViewHTML, initBodyView } from '../bodyview.js';
@@ -128,6 +128,13 @@ export function muscleLoad(items) {
     (e.secondary || []).forEach((m) => { load[m] = (load[m] || 0) + (it.sets || 1) * 0.5; });
   });
   return load;
+}
+// основная мышца упражнения — 1, вспомогательные — 0.45
+function exLoad(e) {
+  const l = {};
+  (e.secondary || []).forEach((m) => { l[m] = 0.45; });
+  l[e.muscle] = 1;
+  return l;
 }
 export function loadFills(load) {
   const max = Math.max(1, ...Object.values(load));
@@ -277,7 +284,7 @@ function exCard(e, added) {
       <div class="ex-demo">${exerciseFigure(e, { cls: 'big' })}</div>
       <div class="ex-side">
         <div class="label" style="margin-bottom:6px">Что качает</div>
-        <div class="mini-bodies">${bodySVG('front', { fills: f })}${bodySVG('back', { fills: f })}</div>
+        ${bodySnapsHTML(exLoad(e), { size: 'xs', fills: f })}
         <div class="ex-muscles"><span class="badge accent">● ${MUSCLES[e.muscle].name}</span>${(e.secondary || []).map((m) => `<span class="badge sec">● ${MUSCLES[m].name}</span>`).join('')}</div>
       </div>
       ${e.tip ? `<div class="ex-tip full">💡 ${esc(e.tip)}</div>` : ''}
@@ -398,7 +405,7 @@ function weekTab() {
         const ms = primaryMuscles(its);
         return `<div class="week-day-card" data-day="${i}">
           <div class="wd-name">${DAY_FULL[i]}</div>
-          <div class="mini-bodies" style="gap:0">${bodySVG('front', { fills: f })}${bodySVG('back', { fills: f })}</div>
+          ${bodySnapsHTML(muscleLoad(its), { size: 'day', fills: f })}
           <div class="wd-sub">${ms.length ? ms.slice(0, 3).map((m) => MUSCLES[m].name).join(', ') : 'Отдых'}</div>
         </div>`;
       }).join('')}
@@ -536,7 +543,7 @@ function exerciseSheet(id) {
     body: `
       <div class="ex-demo sheet-demo">${exerciseFigure(e, { cls: 'big' })}</div>
       <div class="row" style="gap:14px;align-items:flex-start">
-        <div class="mini-bodies" style="flex:none">${bodySVG('front', { fills: f })}${bodySVG('back', { fills: f })}</div>
+        <div style="flex:none">${bodySnapsHTML(exLoad(e), { size: 'sm', fills: f })}</div>
         <div class="stack grow" style="gap:8px">
           <div class="label">Основная мышца</div><div><span class="badge accent">● ${MUSCLES[e.muscle].name}</span></div>
           ${(e.secondary || []).length ? `<div class="label">Вспомогательные</div><div class="ex-muscles">${e.secondary.map((m) => `<span class="badge sec">● ${MUSCLES[m].name}</span>`).join('')}</div>` : ''}

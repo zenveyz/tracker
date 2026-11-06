@@ -810,3 +810,6 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .snap-pair img { height: var(--h); width: auto; display: block; user-select: none; -webkit-user-drag: none; }
 .snap-pair.loading i { height: var(--h); width: calc(var(--h) * 0.42); border-radius: 40px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.06), transparent) 0 0 / 200% 100%, rgba(255,255,255,.035); animation: snapShimmer 1.4s linear infinite; }
 @keyframes snapShimmer { to { background-position: -200% 0, 0 0; } }
+.snap-pair.xs { --h: 140px; }
+.snap-pair.day { --h: 120px; gap: 2px; margin: 6px 0; }
+.ex-expand .snap-pair { justify-content: flex-start; }
