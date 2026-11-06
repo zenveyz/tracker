@@ -208,6 +208,12 @@ function foodSheet() {
       bindSteppers(el);
       const f = (n) => el.querySelector(`[name="${n}"]`);
       el.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+        // повторное нажатие — отменить выбор и вернуть пустую форму
+        if (b.classList.contains('on')) {
+          b.classList.remove('on');
+          f('name').value = ''; f('kcal').value = 300; f('p').value = ''; f('f').value = ''; f('c').value = ''; emoji = '🍽️';
+          return;
+        }
         const p = FOOD_PRESETS[+b.dataset.preset];
         f('name').value = p.name; f('kcal').value = p.kcal; f('p').value = p.p; f('f').value = p.f; f('c').value = p.c; emoji = p.e;
         el.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('on', x === b));
@@ -240,6 +246,11 @@ function drinkSheet() {
       bindSteppers(el);
       const f = (n) => el.querySelector(`[name="${n}"]`);
       el.querySelectorAll('[data-preset]').forEach((b) => b.addEventListener('click', () => {
+        if (b.classList.contains('on')) {
+          b.classList.remove('on');
+          sel = { e: '🥤', water: false }; f('name').value = ''; f('ml').value = 250; f('kcal').value = 0; f('water').checked = false;
+          return;
+        }
         const p = DRINK_PRESETS[+b.dataset.preset];
         sel = p; f('name').value = p.name; f('ml').value = p.ml; f('kcal').value = p.kcal; f('water').checked = !!p.water;
         el.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('on', x === b));

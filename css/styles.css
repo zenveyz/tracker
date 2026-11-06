@@ -93,13 +93,17 @@ svg { display: block; }
 
 /* ---------- фон ---------- */
 .bg-orbs { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+@property --c { syntax: '<color>'; inherits: false; initial-value: transparent; }
+/* мягкие пятна цвета — радиальным градиентом, без filter: blur
+   (большой blur на iPhone рисуется «квадратами» и мигает тёмной плашкой при открытии раздела) */
 .orb {
-  position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.32;
-  transition: background 0.8s ease;
+  position: absolute; border-radius: 50%; opacity: 0.32;
+  background: radial-gradient(closest-side, var(--c), color-mix(in srgb, var(--c) 45%, transparent) 45%, transparent);
+  transition: --c 0.8s ease, opacity 0.8s ease;
 }
-.orb-1 { width: 520px; height: 520px; top: -180px; right: -120px; background: var(--a1); }
-.orb-2 { width: 420px; height: 420px; bottom: -160px; left: -140px; background: var(--a2); opacity: 0.22; }
-.orb-3 { width: 260px; height: 260px; top: 40%; left: 55%; background: var(--a2); opacity: 0.1; }
+.orb-1 { --c: var(--a1); width: 760px; height: 760px; top: -300px; right: -240px; }
+.orb-2 { --c: var(--a2); width: 640px; height: 640px; bottom: -270px; left: -250px; opacity: 0.22; }
+.orb-3 { --c: var(--a2); width: 420px; height: 420px; top: 35%; left: 48%; opacity: 0.1; }
 [data-theme="light"] .orb { opacity: 0.18; }
 
 /* ---------- каркас ---------- */
@@ -110,7 +114,8 @@ svg { display: block; }
   max-width: 1180px; margin: 0 auto; width: 100%;
 }
 .view { animation: viewIn 0.35s cubic-bezier(.2,.8,.2,1); }
-@keyframes viewIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* только прозрачность: transform у раздела ломает position: fixed у кнопки «+» (она прыгала снизу вверх) */
+@keyframes viewIn { from { opacity: 0; } to { opacity: 1; } }
 
 /* ---------- навигация ---------- */
 .nav {
