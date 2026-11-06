@@ -1,6 +1,7 @@
 import { getState, update, exportData, importData, resetAll } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, toast, confirmSheet, dateKey } from '../ui.js';
+import { premiumCardHTML, paywall, deactivate } from '../premium.js';
 
 export function render(root) {
   const st = getState().settings;
@@ -33,6 +34,7 @@ export function render(root) {
       </div>
 
       <div class="stack">
+        ${premiumCardHTML()}
         <div class="card pad-lg stack">
           <div class="bold">📱 Установить на телефон</div>
           <div class="muted small" style="line-height:1.6">
@@ -68,6 +70,11 @@ export function bind(root) {
   root.addEventListener('click', async (e) => {
     const el = e.target.closest('[data-theme-set]');
     if (el) { update((s) => { s.settings.theme = el.dataset.themeSet; }); return; }
+    if (e.target.closest('[data-premium-open]')) { paywall(); return; }
+    if (e.target.closest('[data-premium-off]')) {
+      if (await confirmSheet('Выйти из Премиума?', 'Подписка не отменится — ключ можно будет ввести снова. Отменить оплату можно по ссылке из письма.', 'Выйти')) deactivate();
+      return;
+    }
     if (e.target.closest('[data-export]')) {
       const blob = new Blob([exportData()], { type: 'application/json' });
       const a = document.createElement('a');

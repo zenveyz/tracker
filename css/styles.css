@@ -782,3 +782,15 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .load-row .bar i { display: block; height: 100%; border-radius: 6px; }
 .heat-wrap { margin-top: 16px; }
 .heat-wrap { margin-top: 16px; }
+
+/* ---------- Премиум ---------- */
+.pw-lock { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 12px; background: color-mix(in srgb, var(--a1) 14%, transparent); font-weight: 600; font-size: 14px; }
+.pw-list { display: flex; flex-direction: column; gap: 12px; }
+.pw-item { display: flex; gap: 12px; align-items: flex-start; }
+.pw-item > span { font-size: 22px; line-height: 1; width: 28px; text-align: center; }
+.pw-price { text-align: center; padding: 6px 0 0; }
+.pw-price b { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; }
+.pw-or { display: flex; align-items: center; gap: 10px; color: var(--muted, #8b93a7); font-size: 13px; }
+.pw-or::before, .pw-or::after { content: ''; flex: 1; height: 1px; background: var(--border-2); }
+.premium-card { border: 1px solid color-mix(in srgb, var(--a1) 45%, transparent); }
+.premium-card .pill-on { font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 99px; background: #22c55e22; color: #22c55e; }

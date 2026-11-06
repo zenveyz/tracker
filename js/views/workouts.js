@@ -6,6 +6,7 @@ import { exerciseFigure, animateFigures } from '../figure.js';
 import { bodyViewHTML, initBodyView } from '../bodyview.js';
 import { workoutHeat, trainedItems } from '../stats.js';
 import { heatRange, eachDay } from '../heatmap.js';
+import { requirePremium } from '../premium.js';
 import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, DAY_SHORT, DAY_FULL, weekDates, weekdayIdx, dateKey, confirmSheet, confetti } from '../ui.js';
 
 // ---------- локальное состояние экрана ----------
@@ -483,7 +484,7 @@ function onClick(e) {
     toast(has ? 'Убрано из списка' : 'Добавлено в «Мои упражнения»', has ? '🗑️' : '💪');
     return;
   }
-  if ((el = t('[data-custom-ex]'))) { customExerciseSheet(el.dataset.customEx); return; }
+  if ((el = t('[data-custom-ex]'))) { const m = el.dataset.customEx; requirePremium('Свои упражнения', () => customExerciseSheet(m)); return; }
   if ((el = t('[data-plan-ex]'))) { planSheet({ exId: el.dataset.planEx }); return; }
   if ((el = t('[data-day]'))) {
     ui.day = +el.dataset.day; render(root);

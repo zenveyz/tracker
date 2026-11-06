@@ -9,6 +9,7 @@ import * as goals from './views/goals.js';
 import * as habits from './views/habits.js';
 import * as settings from './views/settings.js';
 import * as sleep from './views/sleep.js';
+import { recheck as recheckPremium } from './premium.js';
 
 const ROUTES = {
   home: { view: home, label: 'Главная', icon: 'home' },
@@ -73,6 +74,7 @@ ensureBodyDefs();
 applyTheme();
 route();
 requestPersistence();
+recheckPremium();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
