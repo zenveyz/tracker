@@ -30,7 +30,7 @@ const TEST_KEY = 'TEST-PREMIUM'; // работает только на localhost
 // Новый код: node -e "console.log(require('crypto').createHash('sha256').update('МОЙ-КОД').digest('hex'))"
 // и добавь хеш в список. Чтобы отключить код — удали его хеш.
 const PROMO_HASHES = [
-  'e8dfcc3ec8046b7b7fb48b8e1eea04f8d52f4ab1eaa2af468d7a2fbbab49408d', // промокод владельца
+  'a3f29d17eab3d9bccc60d1182f292591b61f62d0b111f483d759882073bf860a', // промокод владельца
 ];
 async function sha256(text) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
