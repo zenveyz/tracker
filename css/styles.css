@@ -798,3 +798,8 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .pw-promo .row { width: 100%; }
 .link-btn { background: none; border: 0; color: var(--muted, #8b93a7); font: inherit; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .link-btn:hover { color: var(--text, #fff); }
+/* платный блок: размытый предпросмотр */
+.locked-box { position: relative; overflow: hidden; min-height: 220px; }
+.locked-preview { filter: blur(6px) saturate(0.8); opacity: 0.55; pointer-events: none; user-select: none; }
+.locked-over { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; text-align: center; padding: 16px; background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--bg, #0b0d14) 55%, transparent)); }
+.locked-crown { font-size: 34px; line-height: 1; }

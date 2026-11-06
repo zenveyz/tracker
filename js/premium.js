@@ -47,6 +47,7 @@ export async function redeemPromo(code) {
 
 export const FEATURES = [
   ['💪', 'Свои упражнения', 'добавляй любые упражнения в базу и в план'],
+  ['📈', 'Прогресс', 'календари за месяц и год, история тренировок и нагрузка на мышцы'],
   ['✨', 'Будущие функции', 'всё новое, что появится в Премиуме'],
   ['❤️', 'Поддержка Kosmic', 'приложение развивается на твою покупку'],
 ];
@@ -178,3 +179,19 @@ export function paywall(feature) {
     },
   });
 }
+
+// Заглушка вместо платного блока: размытый предпросмотр + кнопка «Открыть в Премиуме».
+export function lockedHTML(feature, preview = '', cls = 'card') {
+  return `<div class="${cls} locked-box">
+    ${preview ? `<div class="locked-preview" aria-hidden="true" inert>${preview}</div>` : ''}
+    <div class="locked-over">
+      <div class="locked-crown">👑</div>
+      <div class="bold">${esc(feature)} — в Премиуме</div>
+      <button class="btn btn-primary" data-paywall="${esc(feature)}">${icon('sparkles', 16)} Открыть</button>
+    </div>
+  </div>`;
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-paywall]');
+  if (b) { e.stopPropagation(); paywall(b.dataset.paywall); }
+}, true);

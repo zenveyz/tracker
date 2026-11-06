@@ -6,7 +6,7 @@ import { exerciseFigure, animateFigures } from '../figure.js';
 import { bodyViewHTML, initBodyView } from '../bodyview.js';
 import { workoutHeat, trainedItems } from '../stats.js';
 import { heatRange, eachDay } from '../heatmap.js';
-import { requirePremium } from '../premium.js';
+import { requirePremium, isPremium, lockedHTML } from '../premium.js';
 import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, DAY_SHORT, DAY_FULL, weekDates, weekdayIdx, dateKey, confirmSheet, confetti } from '../ui.js';
 
 // ---------- локальное состояние экрана ----------
@@ -86,6 +86,8 @@ function onHistoryRange() {
   sync3D();
 }
 function historyTab() {
+  if (!isPremium()) return `<div class="grid grid-dash"><div class="stack">${workoutHeat()}</div>
+    ${lockedHTML('История и нагрузка на мышцы', `<div class="card body-card"><div class="bold">Нагрузка на мышцы</div><div style="margin-top:14px">${loadListHTML()}</div></div>`, 'card')}</div>`;
   return `
   <div class="grid grid-dash">
     <div class="stack">
@@ -153,7 +155,7 @@ export function render(root) {
     </div>
     ${ui.tab === 'body' ? bodyTab() : ui.tab === 'mine' ? mineTab() : ui.tab === 'history' ? historyTab() : weekTab()}`;
   bindSteppers(root);
-  if ((ui.tab === 'body' || ui.tab === 'history') && ui.view3d && b3state !== 'failed') mount3D(root);
+  if ((ui.tab === 'body' || (ui.tab === 'history' && isPremium())) && ui.view3d && b3state !== 'failed') mount3D(root);
   bv = ui.tab === 'body' && !ui.view3d ? initBodyView(root, { onSelect: (m) => selectMuscle(m, root, { fromBody: true }) }) : null;
   animateFigures(root, exById);
   sync3D();

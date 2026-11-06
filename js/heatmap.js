@@ -2,6 +2,7 @@
 // Используется в тренировках, сне, еде и привычках.
 import { dateKey, addDays } from './ui.js';
 import { icon } from './icons.js';
+import { isPremium, lockedHTML } from './premium.js';
 
 const MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
 const MONTHS_SHORT = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'];
@@ -39,6 +40,7 @@ export function eachDay(from, to, fn) {
 export function heatCard(id, opts) {
   reg.set(id, opts);
   if (!st.has(id)) st.set(id, { mode: 'month', anchor: new Date(), picked: null });
+  if (!isPremium()) return lockedHTML('Прогресс', inner(id), 'card heat-card');
   return `<div class="card heat-card" data-heat="${id}">${inner(id)}</div>`;
 }
 
@@ -122,6 +124,7 @@ function redraw(id) {
 
 document.addEventListener('click', (e) => {
   const card = e.target.closest('[data-heat]');
+  if (!isPremium()) return;
   if (!card) return;
   const id = card.dataset.heat, s = st.get(id), o = reg.get(id);
   if (!s || !o) return;
