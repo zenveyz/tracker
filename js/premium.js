@@ -20,7 +20,7 @@ export const CONFIG = {
     { id: 'life', title: 'Навсегда', price: '24,99 $', per: 'один раз', note: 'без подписки и продлений', checkoutUrl: 'https://zenvey.lemonsqueezy.com/checkout/buy/800a43d9-b139-4388-8996-b66d0f7c462b' },
   ],
   // Lemon Squeezy: магазин 516765, товары 1505754 (навсегда), 1505896 (месяц), 1505905 (год)
-  verifyUrl: '',              // адрес сервера проверки ключей, напр. https://kosmic-premium.ТВОЙ.workers.dev
+  verifyUrl: 'https://falling-frog-f2b0.kosmic-sv.workers.dev', // сервер проверки ключей (Cloudflare Worker, код — server/premium-worker.js)
 };
 // ===============================================================================
 
