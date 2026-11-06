@@ -15,10 +15,11 @@ import { icon } from './icons.js';
 export const CONFIG = {
   // три плана; checkoutUrl — ссылка на оплату этого товара в платёжном сервисе
   plans: [
-    { id: 'month', title: 'Месяц', price: '2,99 $', per: 'в месяц', note: 'первые 7 дней бесплатно', trialDays: 7, checkoutUrl: '' },
-    { id: 'year', title: 'Год', price: '19,99 $', per: 'в год', note: '≈ 1,67 $ в месяц', badge: '−45%', popular: true, checkoutUrl: '' },
-    { id: 'life', title: 'Навсегда', price: '24,99 $', per: 'один раз', note: 'без подписки и продлений', checkoutUrl: '' },
+    { id: 'month', title: 'Месяц', price: '2,99 $', per: 'в месяц', note: 'первые 7 дней бесплатно', trialDays: 7, checkoutUrl: 'https://zenvey.lemonsqueezy.com/checkout/buy/ff99d8f9-964f-48f1-a651-08253a2df464' },
+    { id: 'year', title: 'Год', price: '19,99 $', per: 'в год', note: '≈ 1,67 $ в месяц', badge: '−45%', popular: true, checkoutUrl: 'https://zenvey.lemonsqueezy.com/checkout/buy/2ec6df82-4b84-4024-b634-90b17bed998c' },
+    { id: 'life', title: 'Навсегда', price: '24,99 $', per: 'один раз', note: 'без подписки и продлений', checkoutUrl: 'https://zenvey.lemonsqueezy.com/checkout/buy/800a43d9-b139-4388-8996-b66d0f7c462b' },
   ],
+  // Lemon Squeezy: магазин 516765, товары 1505754 (навсегда), 1505896 (месяц), 1505905 (год)
   verifyUrl: '',              // адрес сервера проверки ключей, напр. https://kosmic-premium.ТВОЙ.workers.dev
 };
 // ===============================================================================
