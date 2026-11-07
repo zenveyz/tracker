@@ -524,15 +524,19 @@ input[type=number] { -moz-appearance: textfield; }
 @media (max-width: 520px) { .kcal-hero { justify-content: center; } .kcal-hero > .grow { flex-basis: 100%; } }
 
 /* ---------- иллюстрации упражнений ---------- */
-:root { --fig: #e9edf7; --fig-far: #7d869f; --eq-frame: #59627c; --eq-pad: #343b50; --eq-plate: #1d2230; --eq-line: #8892ad; --hl1: #ff6a3d; --hl2: #ffb27d; }
-[data-theme="light"] { --fig: #2b3142; --fig-far: #9aa2b6; --eq-frame: #aab1c3; --eq-pad: #cfd4e0; --eq-plate: #e8ebf2; --eq-line: #6b7287; }
+:root { --fig: #e9edf7; --fig-far: #8b93ab; --fig-edge: #151925; --eq-frame: #59627c; --eq-pad: #343b50; --eq-plate: #1d2230; --eq-line: #8892ad; --hl1: #ff6a3d; --hl2: #ffb27d; }
+[data-theme="light"] { --fig: #2b3142; --fig-far: #9aa2b6; --fig-edge: #f4f6fb; --eq-frame: #aab1c3; --eq-pad: #cfd4e0; --eq-plate: #e8ebf2; --eq-line: #6b7287; }
 .fx { width: 100%; height: 100%; overflow: visible; }
 .fx line, .fx polyline { stroke-linecap: round; stroke-linejoin: round; fill: none; }
 .fx-body { stroke: var(--fig); }
 .fx-far { stroke: var(--fig-far); }
 .fx-head { fill: var(--fig); }
-.fx-hl { stroke: var(--hl1); fill: var(--hl1); filter: drop-shadow(0 0 2.5px color-mix(in srgb, var(--hl1) 80%, transparent)); }
-.fx-hl2 { stroke: var(--hl2); fill: var(--hl2); opacity: .75; }
+.fx-hl { fill: var(--hl1); stroke: none; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--hl1) 70%, transparent)); }
+.fx-hl2 { fill: var(--hl2); stroke: none; opacity: .8; }
+.fx-dim { opacity: .55; }
+/* тело фигуры: заливные формы с тонкой тёмной обводкой, чтобы ближняя рука/нога отделялась от корпуса */
+.fx-part { fill: var(--fig); stroke: var(--fig-edge); stroke-width: .7; stroke-linejoin: round; }
+.fx-farp { fill: var(--fig-far); }
 .fx-ground { stroke: var(--border-2); stroke-width: .8; }
 .fx-shadow { fill: rgba(0,0,0,.28); }
 .fx-frame { fill: var(--eq-frame); }

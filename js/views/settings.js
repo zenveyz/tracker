@@ -60,7 +60,7 @@ export function render(root) {
 
 export function bind(root) {
   root.addEventListener('change', async (e) => {
-    if (e.target.name === 'name') { update((s) => { s.settings.name = e.target.value.trim(); }); toast('Сохранено', '👋'); }
+    if (e.target.name === 'name') { update((s) => { s.settings.name = e.target.value.trim(); }); toast('Сохранено', '✅'); }
     if (e.target.matches('[data-import]')) {
       const file = e.target.files[0];
       if (!file) return;

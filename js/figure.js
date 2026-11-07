@@ -40,7 +40,7 @@ function solve(p) {
   const neck = add(sh, mul(hd, L.N));
   const side = [Math.cos(t * R), Math.sin(t * R)];
   const shrug = p.shrug || 0;
-  const pt = (s) => (s[0] === 't' ? add(add(sh, mul(u, s[1])), mul(n, s[2])) : s);
+  const pt = (s) => (s[0] === 't' ? add(add(sh, mul(u, s[1])), mul(n, s[2])) : s.map((v) => (Number.isFinite(v) ? v : 0)));
   const arms = [0, 1].map((i) => {
     const off = front ? (i === 0 ? -8 : 8) : 0;
     const root = add(add(sh, mul(side, off)), mul(u, shrug + (front ? -1.5 : 0)));
@@ -55,11 +55,18 @@ function solve(p) {
     const target = pt(p.feet[i]);
     const ks = (p.ks && p.ks[i]) ?? (front ? (i === 0 ? -1 : 1) : 1);
     const [kn, an] = ik(root, target, L.TH, L.SH, ks);
-    const td = p.toe ? p.toe[i] : front ? [0, 0] : [6, 0];
-    const toe = Array.isArray(td) && td.length === 2 && typeof td[0] === 'number' && p.toeAbs ? td : add(an, td);
-    return { root, kn, an, toe };
+    // направление стопы: из шаблона или (по умолчанию) вычисляется по сгибу колена при отрисовке
+    const toeDir = p.toe ? p.toe[i] : null;
+    return { root, kn, an, toeDir };
   });
-  return { hip, sh, u, n, t, head, neck, arms, legs, front };
+  return { hip, sh, u, n, t, head, neck, arms, legs, front, side };
+}
+
+// куда смотрит лицо (перпендикуляр к оси головы, в сторону взгляда)
+function headFace(J) {
+  const up = [J.head[0] - J.neck[0], J.head[1] - J.neck[1]], l = Math.hypot(up[0], up[1]) || 1;
+  const p = [-up[1] / l, up[0] / l];
+  return p[0] * J.n[0] + p[1] * J.n[1] >= 0 ? p : [-p[0], -p[1]];
 }
 
 // ---------- интерполяция поз ----------
@@ -113,8 +120,8 @@ const T = {
     b: { hip: [54, 72], sh: [80, 62], hands: [[82, 93], [84, 93]], feet: [[18, 92], [21, 92]], toe: [[2, 1], [2, 1]] },
   },
   plank: {
-    a: { hip: [52, 81], sh: [78, 78], hands: [[94, 93], [94, 93]], feet: [[14, 92], [17, 92]], toe: [[2, 1], [2, 1]] },
-    b: { hip: [52, 78], sh: [78, 77], hands: [[94, 93], [94, 93]], feet: [[14, 92], [17, 92]], toe: [[2, 1], [2, 1]] },
+    a: { hip: [50, 80], sh: [77, 78], hands: [[92, 92], [92, 92]], es: [-1, -1], feet: [[13, 91], [16, 91]], toe: [[2, 1], [2, 1]] },
+    b: { hip: [50, 78], sh: [77, 77.5], hands: [[92, 92], [92, 92]], es: [-1, -1], feet: [[13, 91], [16, 91]], toe: [[2, 1], [2, 1]] },
   },
   sidePlank: {
     a: { hip: [52, 82], sh: [78, 72], hands: [[80, 93], [80, 64]], es: [-1, 1], feet: [[16, 92], [16, 92]], toe: [[0, 1], [0, 1]] },
@@ -126,14 +133,14 @@ const T = {
     front: (J) => `${circ(add(J.arms[1].hd, [0, 3.5]), 5.5, 'fx-plate')}${circ(add(J.arms[1].hd, [0, 3.5]), 1.6, 'fx-hub')}`,
   },
   dips: {
-    a: { hip: [58, 58], sh: [60, 32], hands: [[61, 58], [61, 58]], feet: [[46, 80], [44, 80]] },
-    b: { hip: [55, 70], sh: [65, 46], hands: [[61, 58], [61, 58]], feet: [[42, 90], [40, 90]] },
-    back: () => `${EQ.bar(44, 78, 59)}${rect(46, 59, 2.5, 35, 'fx-frame', .6)}${rect(74, 59, 2.5, 35, 'fx-frame', .6)}`,
+    a: { hip: [58, 46], sh: [60, 20], hands: [[61, 46], [61, 46]], feet: [[46, 68], [44, 68]] },
+    b: { hip: [55, 58], sh: [65, 34], hands: [[61, 46], [61, 46]], feet: [[40, 70], [38, 70]] },
+    back: () => `${EQ.bar(44, 78, 47)}${rect(46, 47, 2.5, 47, 'fx-frame', .6)}${rect(74, 47, 2.5, 47, 'fx-frame', .6)}`,
   },
   dipsT: {
-    a: { hip: [59, 58], sh: [60, 32], hands: [[61, 58], [61, 58]], feet: [[48, 80], [46, 80]] },
-    b: { hip: [59, 68], sh: [61, 43], hands: [[61, 58], [61, 58]], feet: [[48, 86], [46, 86]] },
-    back: () => `${EQ.bar(44, 78, 59)}${rect(46, 59, 2.5, 35, 'fx-frame', .6)}${rect(74, 59, 2.5, 35, 'fx-frame', .6)}`,
+    a: { hip: [59, 46], sh: [60, 20], hands: [[61, 46], [61, 46]], feet: [[48, 68], [46, 68]] },
+    b: { hip: [59, 56], sh: [61, 31], hands: [[61, 46], [61, 46]], feet: [[46, 70], [44, 70]] },
+    back: () => `${EQ.bar(44, 78, 47)}${rect(46, 47, 2.5, 47, 'fx-frame', .6)}${rect(74, 47, 2.5, 47, 'fx-frame', .6)}`,
   },
   benchDips: {
     a: { hip: [46, 62], sh: [44, 36], hands: [[38, 64], [38, 64]], feet: [[86, 93], [89, 93]] },
@@ -157,13 +164,13 @@ const T = {
   },
   pulldown: {
     a: { hip: [54, 70], t: -8, hands: [[58, 2], [62, 2]], es: [-1, -1], feet: [[78, 93], [81, 93]] },
-    b: { hip: [54, 70], t: -16, hands: [['t', 0, 9], ['t', 0, 9]], es: [-1, -1], feet: [[78, 93], [81, 93]] },
+    b: { hip: [54, 70], t: -16, hands: [[56, 42], [58, 42]], es: [-1, -1], feet: [[78, 93], [81, 93]] },
     back: () => `${EQ.post(98)}${rect(56, -10, 44, 3, 'fx-frame', 1)}${EQ.pulley([60, -6])}${rect(38, 72, 28, 4.5, 'fx-pad', 2)}${rect(50, 76, 2.5, 18, 'fx-frame', .6)}${circ([74, 63], 3.5, 'fx-pad')}`,
     front: (J) => `${EQ.cable([60, -6], J.arms[1].hd)}${rect(J.arms[1].hd[0] - 12, J.arms[1].hd[1] - 1, 24, 2.2, 'fx-bar', 1)}`,
   },
   seatedRow: {
     a: { hip: [42, 80], t: 22, hands: [[84, 72], [84, 72]], feet: [[88, 86], [90, 86]], toe: [[0, -6], [0, -6]] },
-    b: { hip: [42, 80], t: -8, hands: [['t', 8, 9], ['t', 8, 9]], feet: [[88, 86], [90, 86]], toe: [[0, -6], [0, -6]] },
+    b: { hip: [42, 80], t: -8, hands: [[48, 63], [48, 63]], feet: [[88, 86], [90, 86]], toe: [[0, -6], [0, -6]] },
     back: () => `${EQ.post(104)}${EQ.pulley([102, 84])}${rect(22, 83, 34, 4, 'fx-pad', 2)}${rect(92, 78, 3, 14, 'fx-frame', 1)}`,
     front: (J) => EQ.cable([102, 84], J.arms[1].hd),
   },
@@ -380,6 +387,43 @@ const T = {
     back: () => `${rect(30, 72, 24, 4.5, 'fx-pad', 2)}${rect(40, 76, 2.5, 18, 'fx-frame', .6)}`,
     front: (J) => rect(f1(J.legs[1].kn[0] - 6), f1(J.legs[1].kn[1] - 5), 12, 4, 'fx-pad', 2),
   },
+  // шея: лёжа на спине — подбородок к груди, блин на лбу
+  neckFlex: {
+    a: Ly({ hands: [['t', 9, 5], ['t', 9, 5]], es: [1, 1], head: 0 }),
+    b: Ly({ hands: [['t', 6, 10], ['t', 6, 10]], es: [1, 1], head: -48 }),
+    back: () => EQ.bench(18, 76, 70),
+    front: (J) => EQ.plate(add(J.head, mul(headFace(J), 6.5)), 5.5),
+  },
+  // шея: лёжа на животе — голова поднимается назад, блин на затылке
+  neckExt: {
+    a: { hip: [42, 61], t: 90, face: 1, hands: [['t', 9, -6], ['t', 9, -6]], es: [1, 1], feet: [[4, 63], [4, 63]], toe: [[0, 6], [0, 6]], head: 38 },
+    b: { hip: [42, 61], t: 90, face: 1, hands: [['t', 5, -11], ['t', 5, -11]], es: [1, 1], feet: [[4, 63], [4, 63]], toe: [[0, 6], [0, 6]], head: -32 },
+    back: () => EQ.bench(8, 70, 66),
+    front: (J) => EQ.plate(add(J.head, mul(headFace(J), -6.5)), 5.5),
+  },
+  // шея: наклоны в сторону, ладонь упирается в висок (вид спереди)
+  neckSide: {
+    a: S({ view: 'front', hip: [60, 56], head: 0, hands: [[48, 58], [69, 21]], es: [1, 1], feet: [[55, 95], [65, 95]] }),
+    b: S({ view: 'front', hip: [60, 56], head: 24, hands: [[48, 58], [73, 24]], es: [1, 1], feet: [[55, 95], [65, 95]] }),
+  },
+  // сведение ног в тренажёре (вид спереди, сидя)
+  adductor: {
+    a: S({ view: 'front', hip: [60, 64], hands: [[47, 68], [73, 68]], feet: [[30, 92], [90, 92]] }),
+    b: S({ view: 'front', hip: [60, 64], hands: [[47, 68], [73, 68]], feet: [[52, 92], [68, 92]] }),
+    back: () => `${rect(42, 30, 36, 34, 'fx-pad', 4)}${rect(40, 64, 40, 5, 'fx-pad', 2)}${rect(58, 69, 4, 25, 'fx-frame', 1)}`,
+    front: (J) => J.legs.map((Lg, i) => circ(add(Lg.kn, [i === 0 ? -4.5 : 4.5, 0]), 3.4, 'fx-pad')).join(''),
+  },
+  // сумо-присед: широкая стойка, гантель между ног (вид спереди)
+  sumo: {
+    a: S({ view: 'front', hip: [60, 55], hands: [[58, 70], [62, 70]], es: [1, -1], feet: [[40, 95], [80, 95]] }),
+    b: S({ view: 'front', hip: [60, 71], hands: [[58, 84], [62, 84]], es: [1, -1], feet: [[40, 95], [80, 95]] }),
+    front: (J) => EQ.dbV(add(lerpP(J.arms[0].hd, J.arms[1].hd, 0.5), [0, 5])),
+  },
+  // боковые выпады (вид спереди)
+  sideLunge: {
+    a: S({ view: 'front', hip: [60, 56], hands: [[51, 57], [69, 57]], es: [-1, 1], feet: [[44, 95], [76, 95]] }),
+    b: S({ view: 'front', hip: [71, 69], hands: [[62, 70], [80, 70]], es: [-1, 1], feet: [[38, 95], [82, 95]] }),
+  },
   jumpRope: {
     a: S({ hands: [[48, 60], [68, 60]], feet: [[60, 93], [56, 93]], toe: [[6, 0], [6, 0]] }),
     b: S({ hip: [58, 50], hands: [[48, 54], [68, 54]], feet: [[60, 86], [56, 86]], toe: [[5, 5], [5, 5]] }),
@@ -401,6 +445,8 @@ const MAP = {
   'hip-thrust': 'hipThrust', 'bulgarian-split': 'bulgarian', 'cable-kickback': 'kickback', 'glute-bridge': 'bridge',
   squat: 'squat', 'leg-press': 'legPress', lunges: 'lunge', 'leg-extension': 'legExt', 'front-squat': 'frontSquat', 'goblet-squat': 'goblet',
   rdl: 'rdl', 'lying-leg-curl': 'legCurlLying', 'seated-leg-curl': 'legCurlSeated', 'nordic-curl': 'nordic',
+  'neck-flexion': 'neckFlex', 'neck-extension': 'neckExt', 'neck-side': 'neckSide',
+  'adductor-machine': 'adductor', 'sumo-squat': 'sumo', 'side-lunge': 'sideLunge',
   'standing-calf': 'calfRaise', 'seated-calf': 'seatedCalf', 'leg-press-calf': 'legPressCalf', 'jump-rope': 'jumpRope',
 };
 // для своих упражнений — по группе мышц
@@ -417,31 +463,202 @@ function templateFor(ex) {
   return { tpl, eq: eqOverride || tpl.eq, eqNear: tpl.eqNear };
 }
 
-// ---------- подсветка мышц на фигуре ----------
-function torsoMark(J, from, to, off, w) {
-  const a = add(add(J.hip, mul(J.u, from)), mul(J.n, off));
-  const b = add(add(J.hip, mul(J.u, to)), mul(J.n, off));
-  return line(a, b, w, 'fx-hl');
-}
-function hlShapes(J, muscle, cls) {
-  const near = J.arms[1], nl = J.legs[1];
-  const far = J.arms[0], fl = J.legs[0];
-  const seg = (a, b, w) => line(a, b, w, cls);
-  switch (muscle) {
-    case 'biceps': case 'triceps': return seg(near.root, near.el, 5.2) + (J.front ? seg(far.root, far.el, 5.2) : '');
-    case 'forearms': return seg(near.el, near.hd, 4.6) + (J.front ? seg(far.el, far.hd, 4.6) : '');
-    case 'quads': case 'hamstrings': return seg(nl.root, nl.kn, 6.4) + (J.front ? seg(fl.root, fl.kn, 6.4) : '');
-    case 'calves': return seg(nl.kn, nl.an, 5.4) + (J.front ? seg(fl.kn, fl.an, 5.4) : '');
-    case 'shoulders': return circ(near.root, 4.4, cls) + (J.front ? circ(far.root, 4.4, cls) : '');
-    case 'glutes': return circ(add(J.hip, mul(J.n, J.front ? 0 : -2.5)), 5.2, cls);
-    case 'chest': return torsoMark(J, 17, 24, J.front ? 0 : 2.2, J.front ? 10 : 4.6).replace('fx-hl', cls);
-    case 'abs': return torsoMark(J, 3, 15, J.front ? 0 : 2.4, J.front ? 6 : 4).replace('fx-hl', cls);
-    case 'obliques': return torsoMark(J, 4, 14, 0, J.front ? 9 : 5).replace('fx-hl', cls);
-    case 'lats': return torsoMark(J, 12, 23, J.front ? 0 : -2.4, J.front ? 11 : 4.6).replace('fx-hl', cls);
-    case 'lowerback': return torsoMark(J, 2, 10, J.front ? 0 : -2.4, 4.2).replace('fx-hl', cls);
-    case 'traps': return seg(add(J.sh, mul(J.n, J.front ? 0 : -1.5)), J.neck, 5);
-    default: return '';
+// ---------- рисование тела ----------
+// Тело — заливные формы (корпус с грудью, талией и ягодицами, руки и ноги с мышцами, голова, кисти, ступни).
+// Подсветка закрашивает саму мышцу на нужной стороне: бицепс — спереди плеча, трицепс — сзади,
+// квадрицепс — спереди бедра, бицепс бедра — сзади, икры — сзади голени, грудь — спереди корпуса и т.д.
+const sub = (a, b) => [a[0] - b[0], a[1] - b[1]];
+const len = (v) => Math.hypot(v[0], v[1]) || 1e-6;
+const nrm = (v) => { const l = len(v); return [v[0] / l, v[1] / l]; };
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1];
+const perp = (v) => [-v[1], v[0]];
+const lerpP = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+const P = (p) => `${f1(p[0])} ${f1(p[1])}`;
+
+// замкнутая сглаженная фигура через точки (Catmull-Rom → Безье)
+function smooth(pts, closed = true) {
+  const n = pts.length;
+  const g = (i) => pts[closed ? (i + n) % n : clamp(i, 0, n - 1)];
+  let d = `M${P(pts[0])}`;
+  const last = closed ? n : n - 1;
+  for (let i = 0; i < last; i++) {
+    const p0 = g(i - 1), p1 = g(i), p2 = g(i + 1), p3 = g(i + 2);
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${P(c1)} ${P(c2)} ${P(p2)}`;
   }
+  return d + (closed ? 'Z' : '');
+}
+const pathEl = (d, cls) => `<path d="${d}" class="${cls}"/>`;
+
+// сегмент конечности с профилем толщины: widths = [[t, w], ...] по длине 0..1
+function limbPath(a, b, widths) {
+  const dir = nrm(sub(b, a)), p = perp(dir), L2 = len(sub(b, a));
+  const left = [], right = [];
+  widths.forEach(([t, w]) => { const c = lerpP(a, b, t); left.push(add(c, mul(p, w / 2))); right.push(add(c, mul(p, -w / 2))); });
+  const w0 = widths[0][1] / 2, w1 = widths[widths.length - 1][1] / 2;
+  // скруглённые концы
+  const capA = add(a, mul(dir, -w0 * 0.85)), capB = add(b, mul(dir, w1 * 0.85));
+  return smooth([...left, capB, ...right.reverse(), capA]);
+  void L2;
+}
+// область мышцы на конечности: side = направление (единичный вектор) стороны, где мышца
+function limbRegion(a, b, widths, sideVec, t0, t1, from = 0.05, to = 1.02) {
+  const dir = nrm(sub(b, a)), p = perp(dir);
+  const s = dot(p, sideVec) >= 0 ? 1 : -1;
+  const wAt = (t) => { for (let i = 1; i < widths.length; i++) if (t <= widths[i][0]) { const [ta, wa] = widths[i - 1], [tb, wb] = widths[i]; return wa + (wb - wa) * ((t - ta) / (tb - ta || 1)); } return widths[widths.length - 1][1]; };
+  const outer = [], inner = [];
+  const N = 7;
+  for (let i = 0; i <= N; i++) {
+    const t = t0 + (t1 - t0) * (i / N), env = Math.sin(Math.PI * (i / N)) ** 0.6;
+    const c = lerpP(a, b, t), hw = wAt(t) / 2;
+    outer.push(add(c, mul(p, s * hw * (from + (to - from) * env))));
+    inner.unshift(add(c, mul(p, s * hw * from)));
+  }
+  return smooth([...outer, ...inner.slice(1, -1)]);
+}
+
+// профили толщины
+const W = {
+  ua: [[0, 6.6], [0.35, 6.4], [0.75, 5.2], [1, 4.4]],
+  fa: [[0, 4.6], [0.3, 5], [1, 3.4]],
+  th: [[0, 9.6], [0.35, 8.6], [1, 6]],
+  sh: [[0, 5.8], [0.3, 6.4], [0.75, 4.4], [1, 3.6]],
+};
+// профиль корпуса сбоку: [высота по оси корпуса, вперёд (+n), назад (−n)]
+const TORSO_SIDE = [[-2, 4.2, -5.6], [1.5, 4.8, -6.4], [5, 4.6, -5], [10, 4.1, -4.1], [15.5, 5.1, -4.5], [20.5, 6.2, -5.2], [24.5, 4.8, -4.8], [27.4, 2.6, -3.2]];
+// спереди: [высота, полуширина]
+const TORSO_FRONT = [[-2, 7.6], [2, 8.2], [6, 7.4], [10, 6.6], [15.5, 7.6], [20.5, 9.2], [24.5, 9.8], [27.4, 7.8]];
+
+const tAt = (prof, y, col) => {
+  if (y <= prof[0][0]) return prof[0][col];
+  for (let i = 1; i < prof.length; i++) if (y <= prof[i][0]) { const a = prof[i - 1], b = prof[i]; return a[col] + (b[col] - a[col]) * ((y - a[0]) / (b[0] - a[0])); }
+  return prof[prof.length - 1][col];
+};
+
+function torsoPath(J) {
+  const at = (y, off) => add(add(J.hip, mul(J.u, y)), mul(J.front ? J.side : J.n, off));
+  if (J.front) {
+    const r = TORSO_FRONT.map(([y, w]) => at(y, w)), l = TORSO_FRONT.map(([y, w]) => at(y, -w)).reverse();
+    return smooth([...r, ...l]);
+  }
+  const f = TORSO_SIDE.map(([y, fr]) => at(y, fr)), b = TORSO_SIDE.map(([y, , bk]) => at(y, bk)).reverse();
+  return smooth([...f, ...b]);
+}
+// область на корпусе: side 'front' | 'back' | 'mid' (для косых), y0..y1 по оси, доли от края
+function torsoRegion(J, side, y0, y1, from, to) {
+  const at = (y, off) => add(add(J.hip, mul(J.u, y)), mul(J.n, off));
+  const N = 7, outer = [], inner = [];
+  for (let i = 0; i <= N; i++) {
+    const y = y0 + (y1 - y0) * (i / N), env = 0.55 + 0.45 * Math.sin(Math.PI * (i / N));
+    const fr = tAt(TORSO_SIDE, y, 1), bk = tAt(TORSO_SIDE, y, 2);
+    if (side === 'mid') { outer.push(at(y, fr * to * env)); inner.unshift(at(y, bk * from * env)); continue; }
+    const edge = side === 'front' ? fr : bk;
+    outer.push(at(y, edge * (from + (to - from) * env)));
+    inner.unshift(at(y, edge * from));
+  }
+  return smooth([...outer, ...inner]);
+}
+function torsoRegionFront(J, x0, x1, y0, y1, mirror = true) {
+  const at = (y, x) => add(add(J.hip, mul(J.u, y)), mul(J.side, x));
+  const one = (s) => {
+    const pts = [], N = 6;
+    for (let i = 0; i <= N; i++) { const y = y0 + (y1 - y0) * (i / N), e = 0.6 + 0.4 * Math.sin(Math.PI * i / N); pts.push(at(y, s * (x0 + (x1 - x0) * e))); }
+    for (let i = N; i >= 0; i--) { const y = y0 + (y1 - y0) * (i / N); pts.push(at(y, s * x0)); }
+    return smooth(pts);
+  };
+  return mirror ? one(1) + one(-1) : one(1);
+}
+
+// передняя сторона сегмента конечности: туда, куда сгибается сустав (руки) или противоположно (ноги)
+function interiorDir(a, j, b, seg0, seg1, fallback) {
+  // вектор от сустава к дальнему концу второго сегмента, перпендикулярно первому сегменту
+  const d = nrm(sub(seg1, seg0));
+  const v = sub(b, j), along = dot(v, d);
+  const pv = sub(v, mul(d, along));
+  if (len(pv) < 2.2) { const fb = sub(fallback, mul(d, dot(fallback, d))); return len(fb) < 0.05 ? perp(d) : nrm(fb); }
+  return nrm(pv);
+  void a;
+}
+
+function anatomy(J) {
+  const faceDir = J.n;
+  const arms = J.arms.map((A) => {
+    // бицепс — со стороны, куда сгибается локоть
+    const antUA = interiorDir(A.root, A.el, A.hd, A.root, A.el, faceDir);
+    const antFA = interiorDir(A.hd, A.el, A.root, A.el, A.hd, faceDir);
+    return { ...A, antUA, antFA };
+  });
+  const legs = J.legs.map((Lg) => {
+    // колено сгибается назад: сторона бедра, куда уходит голень — задняя (бицепс бедра)
+    const postTH = interiorDir(Lg.root, Lg.kn, Lg.an, Lg.root, Lg.kn, mul(faceDir, -1));
+    const postSH = interiorDir(Lg.an, Lg.kn, Lg.root, Lg.kn, Lg.an, mul(faceDir, -1));
+    const antSH = mul(postSH, -1);
+    // ступня: перпендикулярно голени, носком вперёд (или как задано в шаблоне)
+    const sd = nrm(sub(Lg.an, Lg.kn));
+    let fd = Lg.toeDir ? nrm(Lg.toeDir) : nrm(add(mul(antSH, 1), mul(sd, 0.12)));
+    if (J.front) fd = nrm(add(sd, [0, 0]));
+    return { ...Lg, postTH, antTH: mul(postTH, -1), postSH, antSH, fd };
+  });
+  return { arms, legs };
+}
+
+function footPath(Lg, front) {
+  if (front) { const c = add(Lg.an, [0, 1.6]); return `M${P(add(c, [-2.6, -1]))} Q${P(add(c, [0, -2.4]))} ${P(add(c, [2.6, -1]))} L${P(add(c, [2.8, 1.2]))} Q${P(add(c, [0, 2.2]))} ${P(add(c, [-2.8, 1.2]))}Z`; }
+  const fd = Lg.fd, up = perp(fd);
+  const s = dot(up, sub(Lg.kn, Lg.an)) > 0 ? 1 : -1; // «верх» стопы — к колену
+  const heel = add(Lg.an, mul(fd, -2.2)), toe = add(Lg.an, mul(fd, 6.8));
+  const pts = [add(heel, mul(up, s * 1.6)), add(Lg.an, mul(up, s * 2.4)), add(lerpP(Lg.an, toe, 0.65), mul(up, s * 1.5)), toe, add(lerpP(Lg.an, toe, 0.5), mul(up, -s * 1.5)), add(heel, mul(up, -s * 1.5))];
+  return smooth(pts);
+}
+
+function headPath(J) {
+  const c = J.head, up = nrm(sub(J.head, J.neck)), fw = J.front ? [0, 0] : faceVec(J, up);
+  const r = 5.4, rv = 6.5;
+  const side = perp(up);
+  const pts = [];
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    let p = add(add(c, mul(up, Math.cos(a) * rv)), mul(side, Math.sin(a) * r));
+    pts.push(p);
+  }
+  let d = smooth(pts);
+  if (!J.front) { // намёк на лицо: нос со стороны взгляда
+    const nose = add(add(c, mul(fw, r + 0.6)), mul(up, -0.6));
+    d += `M${P(add(c, mul(fw, r - 0.8)))} L${P(nose)} L${P(add(add(c, mul(fw, r - 0.6)), mul(up, -2.2)))}Z`;
+  }
+  return d;
+}
+function faceVec(J, up) { const s = dot(perp(up), J.n) >= 0 ? 1 : -1; return mul(perp(up), s); }
+
+function drawPart(d, cls) { return pathEl(d, cls); }
+
+// подсветка мышцы (main — основная, cls — fx-hl / fx-hl2)
+function muscleShapes(J, A, muscle, cls, which) {
+  const out = [];
+  const arm = (i) => A.arms[i], leg = (i) => A.legs[i];
+  const both = J.front ? [0, 1] : [which];
+  const R2 = (d) => pathEl(d, cls);
+  switch (muscle) {
+    case 'biceps': both.forEach((i) => out.push(R2(J.front ? limbRegion(arm(i).root, arm(i).el, W.ua, perp(nrm(sub(arm(i).el, arm(i).root))), 0.15, 0.88, -0.55, 0.55) : limbRegion(arm(i).root, arm(i).el, W.ua, arm(i).antUA, 0.16, 0.9)))); break;
+    case 'triceps': both.forEach((i) => out.push(R2(J.front ? limbRegion(arm(i).root, arm(i).el, W.ua, mul(arm(i).antUA, -1), 0.1, 0.85, 0.35, 1.02) : limbRegion(arm(i).root, arm(i).el, W.ua, mul(arm(i).antUA, -1), 0.1, 0.9)))); break;
+    case 'forearms': both.forEach((i) => out.push(R2(limbRegion(arm(i).el, arm(i).hd, W.fa, arm(i).antFA, 0.05, 0.8, -0.9, 1.02)))); break;
+    case 'shoulders': both.forEach((i) => { const a = arm(i), c = lerpP(a.root, a.el, 0.12); out.push(`<ellipse cx="${f1(c[0])}" cy="${f1(c[1])}" rx="4.6" ry="4.6" class="${cls}"/>`); }); break;
+    case 'quads': both.forEach((i) => out.push(R2(J.front ? limbRegion(leg(i).root, leg(i).kn, W.th, [1, 0], 0.12, 0.92, -0.75, 0.75) : limbRegion(leg(i).root, leg(i).kn, W.th, leg(i).antTH, 0.1, 0.94)))); break;
+    case 'hamstrings': both.forEach((i) => out.push(R2(J.front ? limbRegion(leg(i).root, leg(i).kn, W.th, [1, 0], 0.15, 0.9, -0.7, 0.7) : limbRegion(leg(i).root, leg(i).kn, W.th, leg(i).postTH, 0.12, 0.94)))); break;
+    case 'adductors': both.forEach((i) => out.push(R2(J.front ? limbRegion(leg(i).root, leg(i).kn, W.th, mul(J.side, i === 0 ? 1 : -1), 0.05, 0.7, 0.05, 1.02) : limbRegion(leg(i).root, leg(i).kn, W.th, leg(i).antTH, 0.08, 0.7, -0.45, 0.45)))); break;
+    case 'calves': both.forEach((i) => out.push(R2(J.front ? limbRegion(leg(i).kn, leg(i).an, W.sh, [1, 0], 0.08, 0.7, -0.8, 0.8) : limbRegion(leg(i).kn, leg(i).an, W.sh, leg(i).postSH, 0.06, 0.72)))); break;
+    case 'glutes': out.push(R2(J.front ? torsoRegionFront(J, 0.5, 7.6, -2, 4) : torsoRegion(J, 'back', -2.5, 6, 0.15, 1.05))); break;
+    case 'chest': out.push(R2(J.front ? torsoRegionFront(J, 0.6, 8.6, 16.5, 24.2) : torsoRegion(J, 'front', 15, 24.5, 0.2, 1.04))); break;
+    case 'abs': out.push(R2(J.front ? torsoRegionFront(J, 0.4, 3.8, 2.5, 15, true) : torsoRegion(J, 'front', 2.5, 14.5, 0.15, 1.04))); break;
+    case 'obliques': out.push(R2(J.front ? torsoRegionFront(J, 4.2, 7.4, 3, 14.5) : torsoRegion(J, 'mid', 3, 14, 0.45, 0.75))); break;
+    case 'lats': out.push(R2(J.front ? torsoRegionFront(J, 6.4, 9.6, 12, 21.5) : torsoRegion(J, 'back', 10.5, 22.5, 0.2, 1.04))); break;
+    case 'lowerback': out.push(R2(J.front ? torsoRegionFront(J, 0.3, 4, 1, 10) : torsoRegion(J, 'back', 1, 10.5, 0.12, 1.04))); break;
+    case 'traps': out.push(R2(J.front ? torsoRegionFront(J, 2, 8.2, 24, 28.6) : torsoRegion(J, 'back', 21, 28.2, 0.05, 1.05))); break;
+    case 'neck': out.push(R2(limbPath(J.sh, J.neck, [[0, 4.6], [1, 4]]))); break;
+    default: break;
+  }
+  return out.join('');
 }
 
 // ---------- сборка кадра ----------
@@ -449,38 +666,48 @@ function frame(ex, k) {
   const { tpl, eq, eqNear } = templateFor(ex);
   const pose = lerp(tpl.a, tpl.b, k);
   const J = solve(pose);
-  const fA = J.arms[0], nA = J.arms[1], fL = J.legs[0], nL = J.legs[1];
+  const A = anatomy(J);
+  const fA = A.arms[0], nA = A.arms[1], fL = A.legs[0], nL = A.legs[1];
+  A.legs.forEach((Lg, i) => { J.legs[i].toe = add(Lg.an, mul(Lg.fd, 6.8)); });
+  const main = ex.muscle, sec = (ex.secondary || []).slice(0, 3);
   const out = [];
-  // тень
   out.push(`<ellipse cx="${f1(J.hip[0] + 2)}" cy="${GROUND + 1}" rx="34" ry="2.6" class="fx-shadow"/>`);
   if (tpl.back) out.push(tpl.back(J));
-  const limb = (a, b, c, w, cls) => `<polyline points="${f1(a[0])},${f1(a[1])} ${f1(b[0])},${f1(b[1])} ${f1(c[0])},${f1(c[1])}" stroke-width="${w}" class="${cls}"/>`;
-  const farCls = J.front ? 'fx-body' : 'fx-far';
-  // дальние конечности
-  out.push(limb(fL.root, fL.kn, fL.an, 6.6, farCls), line(fL.an, fL.toe, 4, farCls));
-  if (!J.front) out.push(limb(fA.root, fA.el, fA.hd, 5.4, farCls));
-  // корпус
-  const hipC = J.front ? `${line(add(J.hip, mul([Math.cos(J.t * R), Math.sin(J.t * R)], -5)), add(J.hip, mul([Math.cos(J.t * R), Math.sin(J.t * R)], 5)), 9, 'fx-body')}` : '';
-  out.push(line(J.hip, add(J.sh, mul(J.u, -1)), J.front ? 14 : 10.5, 'fx-body'), hipC);
-  if (J.front) out.push(line(fA.root, nA.root, 7, 'fx-body'));
-  out.push(line(J.sh, J.neck, 4.5, 'fx-body'));
-  out.push(circ(J.head, L.HR, 'fx-head'));
-  // подсветка
-  const main = ex.muscle, sec = (ex.secondary || []).slice(0, 3);
-  sec.forEach((m) => out.push(hlShapes(J, m, 'fx-hl2')));
-  out.push(hlShapes(J, main, 'fx-hl'));
-  // ближние конечности
-  out.push(limb(nL.root, nL.kn, nL.an, 6.6, 'fx-body'), line(nL.an, nL.toe, 4, 'fx-body'));
-  // повторная подсветка ног поверх
-  if (['quads', 'hamstrings', 'calves', 'glutes'].includes(main)) out.push(hlShapes(J, main, 'fx-hl'));
-  if (J.front) out.push(limb(fA.root, fA.el, fA.hd, 5.4, 'fx-body'));
-  // оборудование в руках (за ближней рукой)
-  const handEq = (type, h) => {
-    if (type === 'db') return EQ.db(h);
-    if (type === 'dbV') return EQ.dbV(h);
-    if (type === 'barbell') return EQ.plate(h, tpl.plateR || 8.5);
-    return '';
+
+  const hl = (part) => {
+    // part: 'farLeg' | 'farArm' | 'torso' | 'nearLeg' | 'nearArm'
+    const isFar = part.startsWith('far'), isLeg = part.endsWith('Leg'), isArm = part.endsWith('Arm');
+    const pick = (m) => {
+      const legM = ['quads', 'hamstrings', 'calves', 'adductors'].includes(m);
+      const armM = ['biceps', 'triceps', 'forearms', 'shoulders'].includes(m);
+      if (part === 'torso') return !legM && !armM;
+      return (isLeg && legM) || (isArm && armM);
+    };
+    const idx = isFar ? 0 : 1;
+    let s = '';
+    if (J.front && (isFar)) return ''; // спереди обе стороны рисуются вместе с ближними
+    sec.forEach((m) => { if (pick(m)) s += muscleShapes(J, A, m, isFar ? 'fx-hl2 fx-dim' : 'fx-hl2', idx); });
+    if (pick(main)) s += muscleShapes(J, A, main, isFar ? 'fx-hl fx-dim' : 'fx-hl', idx);
+    return s;
   };
+  const leg = (Lg, cls) => drawPart(limbPath(Lg.root, Lg.kn, W.th), cls) + drawPart(limbPath(Lg.kn, Lg.an, W.sh), cls) + drawPart(footPath(Lg, J.front), cls);
+  const arm = (Ar, cls) => drawPart(limbPath(Ar.root, Ar.el, W.ua), cls) + drawPart(limbPath(Ar.el, Ar.hd, W.fa), cls) + circ(add(Ar.hd, mul(nrm(sub(Ar.hd, Ar.el)), 1.2)), 2.4, cls);
+  const farCls = J.front ? 'fx-part' : 'fx-part fx-farp';
+
+  // дальние конечности
+  out.push(leg(fL, farCls), hl('farLeg'));
+  if (!J.front) out.push(arm(fA, farCls), hl('farArm'));
+  // шея, корпус, голова
+  out.push(drawPart(limbPath(J.sh, J.neck, [[0, 5.2], [1, 4.4]]), 'fx-part'));
+  out.push(drawPart(torsoPath(J), 'fx-part'), hl('torso'));
+  if (main === 'neck' || sec.includes('neck')) out.push(muscleShapes(J, A, 'neck', main === 'neck' ? 'fx-hl' : 'fx-hl2', 1));
+  out.push(drawPart(headPath(J), 'fx-part fx-headp'));
+  // ближняя нога
+  if (J.front) out.push(leg(fL, 'fx-part'));
+  out.push(leg(nL, 'fx-part'), hl('nearLeg'));
+  if (J.front) out.push(arm(fA, 'fx-part'));
+  // снаряды за ближней рукой
+  const handEq = (type, h) => (type === 'db' ? EQ.db(h) : type === 'dbV' ? EQ.dbV(h) : type === 'barbell' ? EQ.plate(h, tpl.plateR || 8.5) : '');
   if (eq === 'barbell' || eqNear) out.push(handEq(eq || eqNear, nA.hd));
   if (eq === 'db' && !J.front) out.push(EQ.db(fA.hd));
   if (eq === 'barbellBack') out.push(EQ.plate(add(J.sh, mul(J.n, -3)), 8.5));
@@ -488,8 +715,8 @@ function frame(ex, k) {
   if (eq === 'dbV1') out.push(EQ.dbV(add(J.sh, add(mul(J.n, 7), mul(J.u, -4)))));
   if (tpl.eqHip) out.push(EQ.plate(add(J.hip, mul(J.n, 4)), 8.5));
   if (eq === 'frontBar') out.push(`${rect(f1(fA.hd[0] - 12), f1(fA.hd[1] - 1), f1(nA.hd[0] - fA.hd[0] + 24), 2.2, 'fx-bar', 1)}${rect(f1(fA.hd[0] - 14), f1(fA.hd[1] - 8), 4, 16, 'fx-dbh', 1.5)}${rect(f1(nA.hd[0] + 10), f1(nA.hd[1] - 8), 4, 16, 'fx-dbh', 1.5)}`);
-  out.push(limb(nA.root, nA.el, nA.hd, 5.4, 'fx-body'));
-  if (['biceps', 'triceps', 'forearms', 'shoulders'].includes(main)) out.push(hlShapes(J, main, 'fx-hl'));
+  // ближняя рука
+  out.push(arm(nA, 'fx-part'), hl('nearArm'));
   if (eq === 'db' && !J.front) out.push(EQ.db(nA.hd));
   if (eq === 'db' && J.front) out.push(EQ.dbV(nA.hd), EQ.dbV(fA.hd));
   if (eq === 'dbV') out.push(EQ.dbV(nA.hd), EQ.dbV(fA.hd));

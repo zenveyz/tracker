@@ -39,7 +39,7 @@ export function render(root) {
   root.innerHTML = `
     <header class="page-head hello">
       <div><div class="muted small bold">${longDate()}</div>
-      <h1 style="margin-top:6px">${greeting()}${st.name ? `, <span class="grad-text">${esc(st.name)}</span>` : ''} 👋</h1></div>
+      <h1 style="margin-top:6px">${greeting()}${st.name ? `, <span class="grad-text">${esc(st.name)}</span>` : ''}</h1></div>
       <a class="icon-btn mobile-only" href="#/settings" aria-label="Настройки">${icon('sliders', 18)}</a>
     </header>
 

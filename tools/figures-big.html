@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>Фигуры упражнений — крупно</title><link rel="stylesheet" href="../css/styles.css">
+<style>
+  body { padding: 6px; }
+  #g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+  .row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 2px 4px; position: relative; }
+  .row svg { height: var(--h, 150px); width: 100%; }
+  .row b { position: absolute; left: 6px; top: 3px; font-size: 10px; color: var(--muted); }
+</style></head>
+<body><div id="g"></div>
+<script type="module">
+import { EXERCISES } from '../js/data/exercises.js';
+import { exerciseFigure } from '../js/figure.js';
+const q = new URLSearchParams(location.search);
+document.body.style.setProperty('--h', (q.get('h') || 150) + 'px');
+const from = +(q.get('from') || 0);
+const ids = q.get('ids'); const list = ids ? ids.split(',').map((id) => EXERCISES.find((e) => e.id === id)) : EXERCISES.slice(from, +(q.get('to') || 8));
+const ks = (q.get('k') || '0.001,1').split(',').map(Number);
+document.getElementById('g').innerHTML = list.map((e, i) => `<div class="row"><b>${from + i}. ${e.name}</b>${ks.map((k) => exerciseFigure(e, { still: k })).join('')}</div>`).join('');
+</script></body></html>
