@@ -1,3 +1,4 @@
+import { LOCALE } from '../i18n.js';
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
 import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, emojiPicker, colorPicker, bindPickers, confetti, confirmSheet, clamp, COLORS } from '../ui.js';
@@ -50,7 +51,7 @@ export function render(root) {
 function goalCard(g) {
   const p = pctOf(g);
   const sub = g.type === 'single'
-    ? (g.done ? `выполнено ${new Date(g.completedAt).toLocaleDateString('ru-RU')}` : daysLeft(g) || 'разовая цель')
+    ? (g.done ? `выполнено ${new Date(g.completedAt).toLocaleDateString(LOCALE)}` : daysLeft(g) || 'разовая цель')
     : `${fmt(g.current, 2)} / ${fmt(g.target, 2)} ${esc(g.unit || '')}${g.deadline && !g.done ? ' · ' + daysLeft(g) : ''}`;
 
   const inner = `<div class="goal-card ${g.done ? 'completed' : ''}" style="--gc:${g.color}">

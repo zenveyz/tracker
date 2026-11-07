@@ -1,3 +1,4 @@
+import { tr } from '../i18n.js';
 import { foodHeat } from '../stats.js';
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
@@ -215,7 +216,7 @@ function foodSheet() {
           return;
         }
         const p = FOOD_PRESETS[+b.dataset.preset];
-        f('name').value = p.name; f('kcal').value = p.kcal; f('p').value = p.p; f('f').value = p.f; f('c').value = p.c; emoji = p.e;
+        f('name').value = tr(p.name); f('kcal').value = p.kcal; f('p').value = p.p; f('f').value = p.f; f('c').value = p.c; emoji = p.e;
         el.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('on', x === b));
       }));
       el.querySelector('[data-save]').addEventListener('click', () => {
@@ -252,7 +253,7 @@ function drinkSheet() {
           return;
         }
         const p = DRINK_PRESETS[+b.dataset.preset];
-        sel = p; f('name').value = p.name; f('ml').value = p.ml; f('kcal').value = p.kcal; f('water').checked = !!p.water;
+        sel = p; f('name').value = tr(p.name); f('ml').value = p.ml; f('kcal').value = p.kcal; f('water').checked = !!p.water;
         el.querySelectorAll('[data-preset]').forEach((x) => x.classList.toggle('on', x === b));
       }));
       el.querySelector('[data-save]').addEventListener('click', () => {

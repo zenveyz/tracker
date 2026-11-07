@@ -1,9 +1,9 @@
 // Офлайн-режим: файлы приложения кешируются, сайт открывается без интернета.
-const CACHE = 'kosmic-v21';
+const CACHE = 'kosmic-v22';
 const CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/';
 const FILES = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',
-  './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/body.js', './js/body3d.js', './js/anatomy3d.js', './js/bodyview.js', './js/figure.js', './js/hero.js', './js/heatmap.js', './js/stats.js', './js/premium.js', './js/bodysnap.js', './js/data/exercises.js',
+  './js/app.js', './js/store.js', './js/ui.js', './js/icons.js', './js/body.js', './js/body3d.js', './js/anatomy3d.js', './js/bodyview.js', './js/figure.js', './js/hero.js', './js/heatmap.js', './js/stats.js', './js/premium.js', './js/i18n.js', './js/bodysnap.js', './js/data/exercises.js',
   './js/views/home.js', './js/views/workouts.js', './js/views/food.js', './js/views/goals.js', './js/views/habits.js', './js/views/settings.js', './js/views/sleep.js',
   './icons/icon-32.png', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png',
 ];

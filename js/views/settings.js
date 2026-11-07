@@ -2,6 +2,7 @@ import { getState, update, exportData, importData, resetAll } from '../store.js'
 import { icon } from '../icons.js';
 import { esc, toast, confirmSheet, dateKey } from '../ui.js';
 import { premiumCardHTML, paywall, deactivate } from '../premium.js';
+import { LANG } from '../i18n.js';
 
 export function render(root) {
   const st = getState().settings;
@@ -19,6 +20,11 @@ export function render(root) {
             <div class="theme-swatches">
               <button class="theme-swatch dark ${st.theme !== 'light' ? 'on' : ''}" data-theme-set="dark">${icon('moon', 16)}&nbsp;Тёмная</button>
               <button class="theme-swatch light ${st.theme === 'light' ? 'on' : ''}" data-theme-set="light">${icon('sun', 16)}&nbsp;Светлая</button>
+            </div></div>
+          <div class="field"><span class="label" data-no-tr>Язык · Language</span>
+            <div class="seg" data-no-tr>
+              <button class="${LANG === 'ru' ? 'on' : ''}" data-lang-set="ru">Русский</button>
+              <button class="${LANG === 'en' ? 'on' : ''}" data-lang-set="en">English</button>
             </div></div>
         </div>
 
@@ -68,6 +74,11 @@ export function bind(root) {
     }
   });
   root.addEventListener('click', async (e) => {
+    const lang = e.target.closest('[data-lang-set]');
+    if (lang) {
+      if (lang.dataset.langSet !== LANG) { update((s) => { s.settings.lang = lang.dataset.langSet; }); location.reload(); }
+      return;
+    }
     const el = e.target.closest('[data-theme-set]');
     if (el) { update((s) => { s.settings.theme = el.dataset.themeSet; }); return; }
     if (e.target.closest('[data-premium-open]')) { paywall(); return; }

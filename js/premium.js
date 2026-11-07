@@ -1,3 +1,4 @@
+import { LOCALE } from './i18n.js';
 // Kosmic Премиум: окно с планами (месяц / год / навсегда), ввод ключа и его проверка.
 //
 // Как это работает:
@@ -123,7 +124,7 @@ export function premiumCardHTML() {
   if (on) {
     return `<div class="card pad-lg stack premium-card on">
       <div class="row between"><div class="bold">👑 Kosmic Премиум</div><span class="pill-on">активен</span></div>
-      <div class="muted small" style="line-height:1.5">Ключ: <span class="num">${esc(maskKey(p.key))}</span>${p.expiresAt ? ` · до ${new Date(p.expiresAt).toLocaleDateString('ru-RU')}` : ''}${p.test ? ' · тестовый' : ''}${p.promo ? ' · промокод, бессрочно' : ''}</div>
+      <div class="muted small" style="line-height:1.5">Ключ: <span class="num">${esc(maskKey(p.key))}</span>${p.expiresAt ? ` · до ${new Date(p.expiresAt).toLocaleDateString(LOCALE)}` : ''}${p.test ? ' · тестовый' : ''}${p.promo ? ' · промокод, бессрочно' : ''}</div>
       <div class="tiny faint">Чтобы включить Премиум на другом устройстве, введи там этот же ключ.</div>
       <button class="btn" data-premium-off>Выйти из Премиума на этом устройстве</button>
     </div>`;

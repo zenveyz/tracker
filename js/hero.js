@@ -1,3 +1,4 @@
+import { LOCALE } from './i18n.js';
 // Анимированная сцена «Гора»: стикмен поднимается к вершине по мере выполнения дневных целей.
 
 const QUOTES = [
@@ -103,7 +104,7 @@ export function heroHTML({ progress, parts }) {
     </div>
    </div>
     <div class="hero-bottom">
-      <div class="hero-alt"><span class="num" data-alt>${alt.toLocaleString('ru-RU')}</span> м <span class="muted-l">из ${PEAK_M.toLocaleString('ru-RU')} м</span>
+      <div class="hero-alt"><span class="num" data-alt>${alt.toLocaleString(LOCALE)}</span> м <span class="muted-l">из ${PEAK_M.toLocaleString(LOCALE)} м</span>
         ${done ? '<span class="hero-done">Вершина покорена! 🏔️</span>' : `<span class="hero-pct">${Math.round(progress * 100)}% пути</span>`}</div>
       <div class="hero-chips">${parts.map((x) => `<span class="hc ${x.v >= 1 ? 'ok' : ''}">${x.e} ${x.label}</span>`).join('')}</div>
     </div>
@@ -191,7 +192,7 @@ function draw(now, walking) {
   const slope = Math.atan2(-dy, Math.abs(dx) || 0.001) * 180 / Math.PI; // >0 — вверх
   st.done.style.strokeDashoffset = `${st.len - L}`;
   const alt = st.svg.closest('[data-hero]').querySelector('[data-alt]');
-  if (alt) alt.textContent = (Math.round(st.p * PEAK_M / 10) * 10).toLocaleString('ru-RU');
+  if (alt) alt.textContent = (Math.round(st.p * PEAK_M / 10) * 10).toLocaleString(LOCALE);
 
   const t = now / 1000;
   const celebrate = st.target >= 0.999 && !walking && st.p >= 0.999;

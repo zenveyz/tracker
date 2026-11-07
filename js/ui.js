@@ -1,13 +1,15 @@
 import { icon } from './icons.js';
+import { LOCALE, isEn } from './i18n.js';
 
 // ---------- строки / числа ----------
 export function esc(s) {
   return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
-export const fmt = (n, d = 0) => Number(n || 0).toLocaleString('ru-RU', { maximumFractionDigits: d });
+export const fmt = (n, d = 0) => Number(n || 0).toLocaleString(LOCALE, { maximumFractionDigits: d });
 export const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
 export function plural(n, one, few, many) {
+  if (isEn) return Math.abs(n) === 1 ? one : many; // по-английски: 1 day / 2 days
   const a = Math.abs(n) % 100, b = a % 10;
   if (a > 10 && a < 20) return many;
   if (b > 1 && b < 5) return few;
