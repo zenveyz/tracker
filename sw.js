@@ -1,5 +1,5 @@
 // Офлайн-режим: файлы приложения кешируются, сайт открывается без интернета.
-const CACHE = 'kosmic-v24';
+const CACHE = 'kosmic-v25';
 const CDN = 'https://cdn.jsdelivr.net/npm/three@0.170.0/';
 const FILES = [
   './', './index.html', './manifest.webmanifest', './css/styles.css',

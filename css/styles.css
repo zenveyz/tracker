@@ -531,8 +531,8 @@ input[type=number] { -moz-appearance: textfield; }
 .fx-body { stroke: var(--fig); }
 .fx-far { stroke: var(--fig-far); }
 .fx-head { fill: var(--fig); }
-.fx-hl { fill: var(--hl1); stroke: none; filter: drop-shadow(0 0 2px color-mix(in srgb, var(--hl1) 70%, transparent)); }
-.fx-hl2 { fill: var(--hl2); stroke: none; opacity: .8; }
+.fx-hl { stroke: var(--hl1); fill: var(--hl1); filter: drop-shadow(0 0 2.5px color-mix(in srgb, var(--hl1) 80%, transparent)); }
+.fx-hl2 { stroke: var(--hl2); fill: var(--hl2); opacity: .75; }
 .fx-dim { opacity: .55; }
 /* тело фигуры: заливные формы с тонкой тёмной обводкой, чтобы ближняя рука/нога отделялась от корпуса */
 .fx-part { fill: var(--fig); stroke: var(--fig-edge); stroke-width: .7; stroke-linejoin: round; }
