@@ -830,3 +830,6 @@ body[data-section="sleep"] { --a1: #818cf8; --a2: #c084fc; }
 .pw-plan .pw-note { font-size: 10.5px; color: var(--faint); line-height: 1.3; margin-top: 4px; }
 .pw-pop { position: absolute; top: -9px; left: 50%; transform: translateX(-50%); white-space: nowrap; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 99px; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); }
 a.btn { text-decoration: none; }
+
+/* минималистичные иконки вместо эмодзи (js/emoji.js) */
+.emi { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex: none; }

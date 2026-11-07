@@ -1,4 +1,5 @@
 import { startI18n } from './i18n.js';
+import { startEmojiIcons } from './emoji.js';
 import { getState, subscribe, requestPersistence } from './store.js';
 import { icon } from './icons.js';
 import { ensureBodyDefs } from './body.js';
@@ -72,6 +73,7 @@ setInterval(() => {
 
 window.addEventListener('hashchange', route);
 startI18n();
+startEmojiIcons();
 ensureBodyDefs();
 applyTheme();
 route();
