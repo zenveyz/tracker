@@ -839,3 +839,33 @@ a.btn { text-decoration: none; }
 
 /* минималистичные иконки вместо эмодзи (js/emoji.js) */
 .emi { display: inline-block; width: 1.15em; height: 1.15em; vertical-align: -0.2em; flex: none; }
+
+/* ---------- привычки по дням недели ---------- */
+.week-dots .wdot.off i { background: transparent; box-shadow: inset 0 0 0 1.5px var(--border); }
+.week-dots .wdot.off { color: color-mix(in srgb, var(--faint) 60%, transparent); }
+
+/* ---------- календарь «что предстоит» ---------- */
+.plan-cal .pc-head { margin-bottom: 12px; gap: 8px; }
+.plan-cal .pc-ic { width: 36px; height: 36px; border-radius: 12px; display: grid; place-items: center; color: #fff; background: linear-gradient(135deg, var(--a1), var(--a2)); flex: none; }
+.plan-cal .pc-month { min-width: 108px; text-align: center; font-weight: 800; font-size: 14px; cursor: pointer; }
+.pc-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.pc-wd { text-align: center; font-size: 10.5px; font-weight: 800; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; padding-bottom: 2px; }
+.pc-cell { appearance: none; border: 1px solid transparent; background: var(--surface-2, rgba(255,255,255,.03)); color: var(--text); border-radius: 12px; aspect-ratio: 1 / 1.05; min-height: 38px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0; cursor: pointer; font: inherit; transition: background .2s, border-color .2s; }
+.pc-cell .n { font-size: 13.5px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.pc-dots { display: flex; gap: 3px; height: 5px; }
+.pc-dots i { width: 5px; height: 5px; border-radius: 50%; display: block; }
+.pc-cell.out { opacity: .22; pointer-events: none; }
+.pc-cell.past .n { color: var(--muted); }
+.pc-cell.all { background: color-mix(in srgb, var(--a1) 16%, transparent); }
+.pc-cell.today { border-color: var(--a1); }
+.pc-cell.today .n { color: var(--a1); }
+.pc-cell.sel { background: linear-gradient(160deg, var(--a1), var(--a2)); border-color: transparent; }
+.pc-cell.sel .n { color: #fff; }
+.pc-cell.sel .pc-dots i { box-shadow: 0 0 0 1.5px #fff; }
+.pc-day { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.pc-day-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.pc-empty { padding: 6px 0 2px; }
+.pc-day .item { text-decoration: none; color: inherit; }
+.pc-tag { flex: none; font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 999px; background: var(--surface-3); color: var(--muted); display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+.pc-tag.ok { background: color-mix(in srgb, var(--gc, var(--a1)) 22%, transparent); color: var(--text); }
+.pc-tag.late, .pc-tag.miss { background: color-mix(in srgb, #fb7185 18%, transparent); color: #fb7185; }

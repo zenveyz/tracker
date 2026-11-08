@@ -2,6 +2,7 @@
 import { getState } from './store.js';
 import { heatCard, eachDay, HEAT } from './heatmap.js';
 import { plural, dateKey } from './ui.js';
+import { isDue } from './views/habits.js';
 import { MUSCLES, findExercise } from './data/exercises.js';
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
@@ -100,7 +101,7 @@ function habitProgress(h, key) {
   return 0;
 }
 function habitsDay(key, d) {
-  const hs = getState().habits.filter((h) => !(h.type === 'timer' && h.mode === 'since') && (h.createdAt || 0) <= endOfDay(d));
+  const hs = getState().habits.filter((h) => !(h.type === 'timer' && h.mode === 'since') && (h.createdAt || 0) <= endOfDay(d) && isDue(h, d));
   if (!hs.length) return null;
   const done = hs.filter((h) => habitProgress(h, key) >= 1).length;
   const p = hs.reduce((a, h) => a + habitProgress(h, key), 0) / hs.length;

@@ -291,6 +291,16 @@ const EN = {
   'Подъёмы на носки сидя': 'Seated calf raise', 'Нагружает камбаловидную мышцу.': 'Targets the soleus.',
   'Носки в жиме ногами': 'Leg press calf raise', 'Толкай платформу только носками.': 'Push the platform with your toes only.',
   'Повторы = секунды прыжков.': 'Reps = seconds of jumping.',
+  // привычки по дням недели и календарь
+  'Отметка': 'Check-off', '✅ Отметка': '✅ Check-off', 'Как часто': 'How often', 'По дням недели': 'On set days',
+  'каждый день': 'every day', 'раз в неделю': 'once a week', 'сколько прошло': 'time since', 'раза': 'times',
+  'Раз в неделю — выбери один день. В эти дни привычка появится в календаре.': 'Once a week — pick one day. On those days the habit shows up in the calendar.',
+  'Выбери хотя бы один день': 'Pick at least one day', 'Сегодня по плану ничего нет': 'Nothing planned for today', 'сегодня отдых': 'rest day today',
+  'Календарь': 'Calendar', 'что предстоит': 'coming up', 'На этот день ничего не запланировано': 'Nothing planned for this day',
+  'срок цели': 'deadline', 'срок прошёл': 'overdue', 'предстоит': 'upcoming', 'сделано': 'done', 'пропущено': 'missed',
+  'Предыдущий месяц': 'Previous month', 'Следующий месяц': 'Next month',
+  'Срок (необязательно — цель появится в календаре)': 'Deadline (optional — the goal shows up in the calendar)',
+  'Понедельник': 'Monday', 'Вторник': 'Tuesday', 'Среда': 'Wednesday', 'Четверг': 'Thursday', 'Пятница': 'Friday', 'Суббота': 'Saturday', 'Воскресенье': 'Sunday',
 };
 
 // ---------- перевод ----------

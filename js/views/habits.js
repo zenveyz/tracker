@@ -1,7 +1,8 @@
 import { habitsHeat } from '../stats.js';
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
-import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, emojiPicker, colorPicker, bindPickers, confetti, confirmSheet, clamp, COLORS, dateKey, addDays, weekDates, DAY_SHORT, splitDuration, fmtClock, fmtHuman } from '../ui.js';
+import { plannerHTML, plannerClick } from '../planner.js';
+import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, emojiPicker, colorPicker, bindPickers, confetti, confirmSheet, clamp, COLORS, dateKey, addDays, weekDates, weekdayIdx, DAY_SHORT, splitDuration, fmtClock, fmtHuman } from '../ui.js';
 
 const ui = { filter: 'all' };
 
@@ -21,11 +22,27 @@ export function dayProgress(h, key = dateKey()) {
   if (h.type === 'timer' && h.mode === 'stopwatch') return clamp(swMs(h, key) / ((h.target || 10) * 60000), 0, 1);
   return 0;
 }
+// по каким дням недели привычка (0 = пн); без days — каждый день
+export const isWeekly = (h) => Array.isArray(h.days) && h.days.length > 0 && h.days.length < 7;
+export function isDue(h, d = new Date()) { return !isWeekly(h) || h.days.includes(weekdayIdx(d)); }
+export function freqLabel(h) {
+  if (h.type === 'timer' && h.mode === 'since') return 'сколько прошло';
+  if (!isWeekly(h)) return 'каждый день';
+  const days = [...h.days].sort().map((i) => DAY_SHORT[i]);
+  return days.length === 1 ? `раз в неделю · ${days[0]}` : days.join(', ');
+}
+// привычки, запланированные на сегодня
+export const dueToday = (habits) => habits.filter((h) => !(h.type === 'timer' && h.mode === 'since') && isDue(h));
+
+// серия: сколько запланированных дней подряд выполнено (дни вне расписания пропускаются)
 export function streak(h) {
   if (h.type === 'timer' && h.mode === 'since') return Math.floor(sinceMs(h) / 86400000);
   let n = 0, d = new Date();
-  if (dayProgress(h, dateKey(d)) < 1) d = addDays(d, -1);
-  while (dayProgress(h, dateKey(d)) >= 1 && n < 3650) { n++; d = addDays(d, -1); }
+  if (!isDue(h, d) || dayProgress(h, dateKey(d)) < 1) d = addDays(d, -1);
+  for (let i = 0; i < 3650; i++, d = addDays(d, -1)) {
+    if (!isDue(h, d)) continue;
+    if (dayProgress(h, dateKey(d)) >= 1) n++; else break;
+  }
   return n;
 }
 
@@ -54,13 +71,13 @@ export function tickTimers(root) {
 }
 export const tick = tickTimers;
 
-const TYPE_LABEL = { check: 'Каждый день', count: 'Количество', timer: 'Таймер' };
+const TYPE_LABEL = { check: 'Отметка', count: 'Количество', timer: 'Таймер' };
 
 // ---------- рендер ----------
 export function render(root) {
   const habits = getState().habits;
   const list = habits.filter((h) => ui.filter === 'all' || h.type === ui.filter);
-  const daily = habits.filter((h) => !(h.type === 'timer' && h.mode === 'since'));
+  const daily = dueToday(habits);
   const doneToday = daily.filter((h) => dayProgress(h) >= 1).length;
 
   root.innerHTML = `
@@ -70,18 +87,20 @@ export function render(root) {
     </header>
 
     ${habits.length ? `<div class="card card-accent" style="margin-bottom:16px">
-      <div class="row"><div class="grow"><div class="bold">Сегодня выполнено ${doneToday} из ${daily.length}</div>
+      <div class="row"><div class="grow"><div class="bold">${daily.length ? `Сегодня выполнено ${doneToday} из ${daily.length}` : 'Сегодня по плану ничего нет'}</div>
         <div class="bar" style="margin-top:10px"><i style="width:${daily.length ? (doneToday / daily.length) * 100 : 0}%"></i></div></div>
         <span style="font-size:30px;margin-left:8px">${doneToday === daily.length && daily.length ? '🔥' : '🌱'}</span></div></div>` : ''}
 
     <div class="chips" style="margin-bottom:16px">
-      ${[['all', 'Все'], ['check', '✅ Каждый день'], ['count', '🔢 Количество'], ['timer', '⏱️ Таймеры']].map(([k, l]) => `<button class="chip ${ui.filter === k ? 'on' : ''}" data-filter="${k}">${l}</button>`).join('')}
+      ${[['all', 'Все'], ['check', '✅ Отметка'], ['count', '🔢 Количество'], ['timer', '⏱️ Таймеры']].map(([k, l]) => `<button class="chip ${ui.filter === k ? 'on' : ''}" data-filter="${k}">${l}</button>`).join('')}
     </div>
 
     ${list.length ? `<div class="grid grid-auto">${list.map(habitCard).join('')}</div>` : `
       <div class="card"><div class="empty"><div class="em">🌱</div><h4>${habits.length ? 'Нет привычек этого типа' : 'Создай первую привычку'}</h4>
         <p>Например: «Пить воду», «10 000 шагов», «Без сладкого» с таймером, сколько ты держишься.</p>
         <button class="btn btn-primary" data-new>${icon('plus', 18)} Новая привычка</button></div></div>`}
+
+    ${habits.length ? `<div style="margin-top:16px">${plannerHTML()}</div>` : ''}
 
     <button class="fab mobile-only" data-new aria-label="Новая привычка">${icon('plus', 26)}</button>`;
   root.insertAdjacentHTML('beforeend', `<div class="heat-wrap">${habitsHeat()}</div>`);
@@ -91,7 +110,7 @@ function weekDots(h) {
   const today = dateKey();
   return `<div class="week-dots">${weekDates().map((d, i) => {
     const k = dateKey(d), p = dayProgress(h, k);
-    return `<div class="wdot ${p >= 1 ? 'on' : p > 0 ? 'part' : ''} ${k === today ? 'today' : ''}"><i></i>${DAY_SHORT[i]}</div>`;
+    return `<div class="wdot ${p >= 1 ? 'on' : p > 0 ? 'part' : ''} ${isDue(h, d) ? '' : 'off'} ${k === today ? 'today' : ''}"><i></i>${DAY_SHORT[i]}</div>`;
   }).join('')}</div>`;
 }
 
@@ -138,8 +157,8 @@ function habitCard(h) {
     <div class="gc-top">
       <div class="gc-emoji">${h.emoji}</div>
       <div class="grow"><div class="gc-title">${esc(h.title)}</div>
-        <div class="gc-sub row" style="gap:8px">${TYPE_LABEL[h.type]}${h.type === 'timer' ? (h.mode === 'since' ? ' · сколько прошло' : ' · секундомер') : ''}
-        ${st ? `<span class="streak">${icon('flame', 13)} ${st} ${plural(st, 'день', 'дня', 'дней')}</span>` : ''}</div></div>
+        <div class="gc-sub row" style="gap:8px">${TYPE_LABEL[h.type]}${h.type === 'timer' ? (h.mode === 'since' ? ' · сколько прошло' : ' · секундомер') : ''}${h.type === 'timer' && h.mode === 'since' ? '' : ' · ' + freqLabel(h)}
+        ${st ? `<span class="streak">${icon('flame', 13)} ${st} ${isWeekly(h) ? plural(st, 'раз', 'раза', 'раз') : plural(st, 'день', 'дня', 'дней')}</span>` : ''}</div></div>
       ${action}
       <button class="icon-btn sm ghost" data-edit="${h.id}" aria-label="Изменить">${icon('dots', 18)}</button>
     </div>
@@ -152,6 +171,7 @@ export function bind(root) {
   root.addEventListener('click', (e) => {
     const t = (sel) => e.target.closest(sel);
     let el;
+    if (plannerClick(e)) return;
     if (t('[data-new]')) return habitSheet();
     if ((el = t('[data-filter]'))) { ui.filter = el.dataset.filter; render(root); return; }
     if ((el = t('[data-edit]'))) return habitSheet(getState().habits.find((x) => x.id === el.dataset.edit));
@@ -210,7 +230,7 @@ export function toggleStopwatch(id) {
 }
 
 function celebrateIfAll() {
-  const daily = getState().habits.filter((h) => !(h.type === 'timer' && h.mode === 'since'));
+  const daily = dueToday(getState().habits);
   if (daily.length > 1 && daily.every((h) => dayProgress(h) >= 1)) { confetti(); toast('Все привычки на сегодня выполнены!', '🔥'); }
 }
 
@@ -223,13 +243,15 @@ function habitSheet(habit) {
   const h = habit || { title: '', emoji: '💧', color: COLORS[2], type: 'check', target: 8, step: 1, unit: '', mode: 'since', startedAt: Date.now() };
   let { emoji, color, type, mode } = h;
   mode ||= 'since';
+  let weekly = isWeekly(h);
+  const days = new Set(weekly ? h.days : [weekdayIdx()]);
   openSheet({
     title: habit ? 'Изменить привычку' : 'Новая привычка',
     body: `
       <div class="field"><span class="label">Привычка</span><input class="input" name="title" value="${esc(h.title)}" placeholder="Например: Пить воду" autofocus /></div>
       <div class="field"><span class="label">Тип</span>
         <div class="type-cards">
-          <button type="button" class="type-card ${type === 'check' ? 'on' : ''}" data-type="check"><span class="t">✅ Каждый день</span><span class="d">Просто отмечаю: сделал или нет.</span></button>
+          <button type="button" class="type-card ${type === 'check' ? 'on' : ''}" data-type="check"><span class="t">✅ Отметка</span><span class="d">Просто отмечаю: сделал или нет.</span></button>
           <button type="button" class="type-card ${type === 'count' ? 'on' : ''}" data-type="count"><span class="t">🔢 Количество</span><span class="d">Стаканы, страницы, шаги — с нормой на день.</span></button>
           <button type="button" class="type-card ${type === 'timer' ? 'on' : ''}" data-type="timer"><span class="t">⏱️ Таймер</span><span class="d">Сколько прошло времени или секундомер.</span></button>
         </div></div>
@@ -252,6 +274,14 @@ function habitSheet(habit) {
           ${stepper('minutes', type === 'timer' && h.mode === 'stopwatch' ? h.target : 15, { step: 5, min: 1, max: 1440 })}
         </div>
       </div>
+      <div class="field" data-freq ${type === 'timer' && mode === 'since' ? 'hidden' : ''}><span class="label">Как часто</span>
+        <div class="seg">
+          <button type="button" data-freq-set="daily" class="${weekly ? '' : 'on'}">Каждый день</button>
+          <button type="button" data-freq-set="weekly" class="${weekly ? 'on' : ''}">По дням недели</button>
+        </div>
+        <div class="week-strip" data-days style="margin-top:10px" ${weekly ? '' : 'hidden'}>${DAY_SHORT.map((n, i) => `<button type="button" class="day-pill ${days.has(i) ? 'on' : ''}" data-d="${i}" style="padding:10px 0"><span class="dn">${n}</span></button>`).join('')}</div>
+        <div class="muted tiny" data-days-hint style="margin-top:6px" ${weekly ? '' : 'hidden'}>Раз в неделю — выбери один день. В эти дни привычка появится в календаре.</div>
+      </div>
       <div class="field"><span class="label">Иконка</span>${emojiPicker(emoji)}</div>
       <div class="field"><span class="label">Цвет</span>${colorPicker(color)}</div>
       <button class="btn btn-primary btn-block" data-save>${icon('check', 18)} ${habit ? 'Сохранить' : 'Создать привычку'}</button>
@@ -263,17 +293,34 @@ function habitSheet(habit) {
         type = b.dataset.type;
         el.querySelectorAll('[data-type]').forEach((x) => x.classList.toggle('on', x === b));
         el.querySelectorAll('[data-f]').forEach((x) => { x.hidden = x.dataset.f !== type; });
+        syncFreq();
+      }));
+      const syncFreq = () => { el.querySelector('[data-freq]').hidden = type === 'timer' && mode === 'since'; };
+      el.querySelectorAll('[data-freq-set]').forEach((b) => b.addEventListener('click', () => {
+        weekly = b.dataset.freqSet === 'weekly';
+        el.querySelectorAll('[data-freq-set]').forEach((x) => x.classList.toggle('on', x === b));
+        el.querySelector('[data-days]').hidden = !weekly;
+        el.querySelector('[data-days-hint]').hidden = !weekly;
+      }));
+      el.querySelectorAll('[data-d]').forEach((b) => b.addEventListener('click', () => {
+        const i = +b.dataset.d;
+        if (days.has(i)) days.delete(i); else days.add(i);
+        b.classList.toggle('on', days.has(i));
       }));
       el.querySelectorAll('[data-mode]').forEach((b) => b.addEventListener('click', () => {
         mode = b.dataset.mode;
         el.querySelectorAll('[data-mode]').forEach((x) => x.classList.toggle('on', x === b));
         el.querySelectorAll('[data-m]').forEach((x) => { x.hidden = x.dataset.m !== mode; });
+        syncFreq();
       }));
       const f = (n) => el.querySelector(`[name="${n}"]`).value;
       el.querySelector('[data-save]').addEventListener('click', () => {
         const title = f('title').trim();
         if (!title) { toast('Напиши название привычки', '✍️'); return; }
         const data = { title, emoji, color, type };
+        const usesFreq = !(type === 'timer' && mode === 'since');
+        if (usesFreq && weekly && !days.size) { toast('Выбери хотя бы один день', '📅'); return; }
+        data.days = usesFreq && weekly && days.size < 7 ? [...days].sort() : undefined;
         if (type === 'count') Object.assign(data, { target: Math.max(1, num(f('target'), 8)), step: Math.max(1, num(f('step'), 1)), unit: f('unit').trim() });
         if (type === 'timer') {
           data.mode = mode;

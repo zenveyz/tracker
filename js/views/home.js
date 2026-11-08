@@ -5,7 +5,7 @@ import { MUSCLES, findExercise } from '../data/exercises.js';
 import { esc, fmt, ring, longDate, dateKey, weekdayIdx, clamp, plural, fmtClock, toast } from '../ui.js';
 import { dayItems, isDone, muscleLoad, loadFills } from './workouts.js';
 import { dayTotals } from './food.js';
-import { dayProgress, sinceMs, swMs, timerUnits, tickTimers, toggleStopwatch, streak } from './habits.js';
+import { dayProgress, sinceMs, swMs, timerUnits, tickTimers, toggleStopwatch, streak, dueToday } from './habits.js';
 import { heroHTML, startHero, stopHero } from '../hero.js';
 import { lastNight, sleepGoal, sleepData, fmtH, logSheet } from './sleep.js';
 import { addDays, DAY_SHORT } from '../ui.js';
@@ -29,7 +29,7 @@ export function render(root) {
   const t = dayTotals(dateKey());
   const kp = t.kcal / st.kcalGoal;
   const timers = s.habits.filter((h) => h.type === 'timer' && (h.mode === 'since' || h.running));
-  const habits = s.habits.filter((h) => !(h.type === 'timer' && h.mode === 'since'));
+  const habits = dueToday(s.habits);
   const habitsDone = habits.filter((h) => dayProgress(h) >= 1).length;
   const goals = s.goals.filter((g) => !g.done).slice(0, 4);
   const { progress, parts } = dayProgressAll();
@@ -102,7 +102,7 @@ export function render(root) {
     <div class="grid grid-dash" style="margin-top:14px">
       <div class="card pad-lg" ${sec('habits')}>
         <div class="dc-head row" style="margin-bottom:14px"><span class="dc-ic" style="width:36px;height:36px;border-radius:12px;display:grid;place-items:center;color:#fff;background:linear-gradient(135deg,var(--a1),var(--a2))">${icon('flame', 18)}</span>
-          <div class="grow"><div class="dc-title bold">Привычки</div><div class="muted tiny bold">${habits.length ? `${habitsDone} из ${habits.length} сегодня` : 'пока нет'}</div></div>
+          <div class="grow"><div class="dc-title bold">Привычки</div><div class="muted tiny bold">${habits.length ? `${habitsDone} из ${habits.length} сегодня` : s.habits.length ? 'сегодня отдых' : 'пока нет'}</div></div>
           <a class="link small muted bold" href="#/habits">Все</a></div>
         ${habits.length ? `<div class="list">${habits.slice(0, 6).map((h) => {
           const p = dayProgress(h), stx = streak(h);
@@ -115,7 +115,7 @@ export function render(root) {
               : h.type === 'count' ? `<button class="icon-btn sm" data-hcount="${h.id}" aria-label="Плюс">${icon('plus', 16)}</button>`
               : `<button class="icon-btn sm" data-sw="${h.id}" aria-label="Старт/пауза">${icon(h.running ? 'pause' : 'play', 15)}</button>`}
           </div>`;
-        }).join('')}</div>` : `<a class="btn btn-block" href="#/habits">${icon('plus', 18)} Создать привычку</a>`}
+        }).join('')}</div>` : s.habits.length ? '<div class="muted small">Сегодня по плану ничего нет</div>' : `<a class="btn btn-block" href="#/habits">${icon('plus', 18)} Создать привычку</a>`}
       </div>
 
       <div class="card pad-lg" ${sec('goals')}>
@@ -172,7 +172,7 @@ function dayProgressAll() {
   const t = dayTotals(dateKey());
   parts.push({ e: '💧', label: `Вода ${fmt(t.water / 1000, 1)}/${fmt(st.waterGoal / 1000, 1)} л`, v: clamp(t.water / st.waterGoal, 0, 1) });
   parts.push({ e: '🍽️', label: `${fmt(t.kcal)} ккал`, v: clamp(t.kcal / st.kcalGoal, 0, 1) });
-  const hs = s.habits.filter((h) => !(h.type === 'timer' && h.mode === 'since'));
+  const hs = dueToday(s.habits);
   if (hs.length) { const n = hs.filter((h) => dayProgress(h) >= 1).length; parts.push({ e: '🔥', label: `Привычки ${n}/${hs.length}`, v: n / hs.length }); }
   const sl = (s.sleep || {})[dateKey()];
   parts.push({ e: '😴', label: sl ? `Сон ${fmtH(sl.hours).replace(' мин', 'м').replace(' ч ', 'ч ')}` : 'Сон', v: sl ? clamp(sl.hours / (st.sleepGoal || 8), 0, 1) : 0 });

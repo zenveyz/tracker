@@ -1,6 +1,7 @@
 import { LOCALE } from '../i18n.js';
 import { getState, update, uid } from '../store.js';
 import { icon } from '../icons.js';
+import { plannerHTML, plannerClick } from '../planner.js';
 import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, num, emojiPicker, colorPicker, bindPickers, confetti, confirmSheet, clamp, COLORS } from '../ui.js';
 
 const ui = { filter: 'active' };
@@ -44,6 +45,8 @@ export function render(root) {
         <p>${ui.filter === 'active' ? 'Например: «Пробежать 5 км» или «Накопить 100 000 ₽».' : 'Выполняй цели — и собирай коллекцию побед.'}</p>
         ${ui.filter === 'active' ? `<button class="btn btn-primary" data-new>${icon('plus', 18)} Новая цель</button>` : ''}
       </div></div>`}
+
+    <div style="margin-top:16px">${plannerHTML()}</div>
 
     <button class="fab mobile-only" data-new aria-label="Новая цель">${icon('plus', 26)}</button>`;
 }
@@ -93,6 +96,7 @@ export function bind(root) {
   root.addEventListener('click', (e) => {
     const t = (sel) => e.target.closest(sel);
     let el;
+    if (plannerClick(e)) return;
     if (t('[data-new]')) return goalSheet();
     if ((el = t('[data-filter]'))) { ui.filter = el.dataset.filter; render(root); return; }
     if ((el = t('[data-complete]'))) {
@@ -164,7 +168,7 @@ function goalSheet(goal) {
           <div class="field"><span class="label">Шаг кнопки «+»</span>${stepper('step', g.step, { step: 1, min: 0.01, max: 1e9, dec: 2 })}</div>
         </div>
       </div>
-      <div class="field"><span class="label">Срок (необязательно)</span><input class="input" type="date" name="deadline" value="${g.deadline || ''}" /></div>
+      <div class="field"><span class="label">Срок (необязательно — цель появится в календаре)</span><input class="input" type="date" name="deadline" value="${g.deadline || ''}" /></div>
       <div class="field"><span class="label">Иконка</span>${emojiPicker(emoji)}</div>
       <div class="field"><span class="label">Цвет</span>${colorPicker(color)}</div>
       <button class="btn btn-primary btn-block" data-save>${icon('check', 18)} ${goal ? 'Сохранить' : 'Создать цель'}</button>
