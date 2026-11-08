@@ -72,6 +72,7 @@ const EN = {
   'Поддержка Kosmic': 'Support Kosmic', 'приложение развивается благодаря тебе': 'the app grows thanks to you',
   'Премиум включён': 'Premium unlocked', 'Оплата ещё не подключена': 'Payments are not connected yet', 'Нет связи с сервером, попробуй позже': 'No connection to the server, try again later',
   'Подписка Премиум закончилась': 'Your Premium subscription has ended', 'Подписка закончилась': 'Subscription has ended', 'Ключ не подошёл': "Key didn't work", 'Введи ключ': 'Enter a key',
+  '🎁 Премиум в подарок': '🎁 Premium as a gift', '🎁 Kosmic Премиум': '🎁 Kosmic Premium', 'в подарок': 'gift', 'Спасибо, что установил Kosmic!': 'Thanks for installing Kosmic!', 'Сейчас все функции Премиума открыты бесплатно — это наш подарок тебе.': 'All Premium features are free right now — it’s our gift to you.', 'Отлично': 'Great', 'Сейчас Премиум бесплатный для всех, кто установил Kosmic: свои упражнения, прогресс и все новые функции. Спасибо, что ты с нами!': 'Premium is free right now for everyone who installed Kosmic: custom exercises, progress and all new features. Thanks for being with us!',
   '👑 Kosmic Премиум': '👑 Kosmic Premium', 'Kosmic Премиум': 'Kosmic Premium', 'активен': 'active', 'Ключ:': 'Key:', '· до': '· until', '· тестовый': '· test',
   '· промокод, бессрочно': '· promo code, no expiry',
   'Чтобы включить Премиум на другом устройстве, введи там этот же ключ.': 'To unlock Premium on another device, enter the same key there.',

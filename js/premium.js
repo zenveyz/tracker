@@ -22,6 +22,8 @@ export const CONFIG = {
   ],
   // Lemon Squeezy: магазин 516765, товары 1505754 (навсегда), 1505896 (месяц), 1505905 (год)
   verifyUrl: 'https://falling-frog-f2b0.kosmic-sv.workers.dev', // сервер проверки ключей (Cloudflare Worker, код — server/premium-worker.js)
+  // Премиум бесплатно для всех — подарок. Чтобы снова сделать платным, поставь false.
+  freeGift: true,
 };
 // ===============================================================================
 
@@ -57,11 +59,32 @@ export const FEATURES = [
   ['❤️', 'Поддержка Kosmic', 'приложение развивается благодаря тебе'],
 ];
 
-export function isPremium(s = getState()) {
+const ownPremium = (s = getState()) => {
   const p = s.premium;
   if (!p?.active || !p.key) return false;
   if (p.expiresAt && Date.now() > p.expiresAt) return false;
   return p.promo || Date.now() - (p.checkedAt || 0) < OFFLINE_GRACE;
+};
+export function isPremium(s = getState()) {
+  return CONFIG.freeGift || ownPremium(s);
+}
+
+// Один раз показываем, что Премиум — подарок
+export function showGiftOnce() {
+  if (!CONFIG.freeGift || getState().giftSeen) return;
+  setTimeout(() => {
+    update((s) => { s.giftSeen = true; });
+    openSheet({
+      title: '🎁 Премиум в подарок',
+      body: `<div class="card pad-lg stack premium-card on gift-card">
+          <div class="bold" style="font-size:17px">Спасибо, что установил Kosmic!</div>
+          <div class="muted small" style="line-height:1.55">Сейчас все функции Премиума открыты бесплатно — это наш подарок тебе.</div>
+        </div>
+        <div class="pw-list">${FEATURES.slice(0, 3).map(([e, t, d]) => `<div class="pw-item"><span>${e}</span><div><b>${t}</b><div class="muted small">${d}</div></div></div>`).join('')}</div>
+        <button class="btn btn-primary btn-block" data-gift-ok>${icon('check', 18)} Отлично</button>`,
+      onMount: (el) => el.querySelector('[data-gift-ok]').addEventListener('click', closeSheet),
+    });
+  }, 900);
 }
 
 // Обёртка для платных функций: если премиум есть — выполняет действие, иначе показывает окно.
@@ -120,7 +143,13 @@ export async function recheck() {
 }
 
 export function premiumCardHTML() {
-  const p = getState().premium, on = isPremium();
+  const p = getState().premium, on = ownPremium();
+  if (!on && CONFIG.freeGift) {
+    return `<div class="card pad-lg stack premium-card on gift-card">
+      <div class="row between"><div class="bold">🎁 Kosmic Премиум</div><span class="pill-on">в подарок</span></div>
+      <div class="muted small" style="line-height:1.5">Сейчас Премиум бесплатный для всех, кто установил Kosmic: свои упражнения, прогресс и все новые функции. Спасибо, что ты с нами!</div>
+    </div>`;
+  }
   if (on) {
     return `<div class="card pad-lg stack premium-card on">
       <div class="row between"><div class="bold">👑 Kosmic Премиум</div><span class="pill-on">активен</span></div>
