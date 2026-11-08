@@ -6,7 +6,8 @@ import { esc, fmt, plural, openSheet, closeSheet, toast, stepper, bindSteppers, 
 const ui = { filter: 'all' };
 
 // ---------- логика привычек ----------
-export function sinceMs(h) { return Date.now() - (h.startedAt || Date.now()); }
+// на паузе время замирает в момент паузы
+export function sinceMs(h) { return (h.pausedAt || Date.now()) - (h.startedAt || Date.now()); }
 export function swMs(h, key = dateKey()) {
   let v = (h.log || {})[key] || 0;
   if (h.running && h.runStart && key === dateKey()) v += Date.now() - h.runStart;
@@ -114,11 +115,14 @@ function habitCard(h) {
       <div style="margin-top:12px">${weekDots(h)}</div>`;
   } else if (h.mode === 'since') {
     body = `<div class="timer-widget" style="--c1:${h.color};--c2:color-mix(in srgb, ${h.color} 55%, #312e81);margin-top:14px">
-        <div class="tw-title">${icon('hourglass', 15)} Держусь уже</div>
+        <div class="tw-title">${icon(h.pausedAt ? 'pause' : 'hourglass', 15)} ${h.pausedAt ? 'На паузе' : 'Держусь уже'}</div>
         <div class="tw-units" data-tick-since="${h.id}">${timerUnits(sinceMs(h))}</div>
         <div class="tw-sub">Рекорд: ${h.best ? fmtHuman(Math.max(h.best, sinceMs(h))) : fmtHuman(sinceMs(h))}${h.resets?.length ? ` · попыток: ${h.resets.length + 1}` : ''}</div>
       </div>
-      <div class="prog-controls"><button class="btn btn-sm grow" data-reset="${h.id}">${icon('rotate', 15)} Начать заново</button></div>`;
+      <div class="prog-controls">
+        <button class="btn btn-sm grow" data-pause="${h.id}">${h.pausedAt ? `${icon('play', 15)} Продолжить` : `${icon('pause', 15)} Пауза`}</button>
+        <button class="btn btn-sm grow" data-reset="${h.id}">${icon('rotate', 15)} Начать заново</button>
+      </div>`;
   } else {
     const ms = swMs(h);
     body = `<div class="timer-face" style="--gc:${h.color}">
@@ -170,11 +174,19 @@ export function bind(root) {
       return;
     }
     if ((el = t('[data-sw]'))) { toggleStopwatch(el.dataset.sw); return; }
+    if ((el = t('[data-pause]'))) {
+      update((s) => {
+        const x = s.habits.find((y) => y.id === el.dataset.pause);
+        if (x.pausedAt) { x.startedAt += Date.now() - x.pausedAt; delete x.pausedAt; } // продолжить: время паузы не засчитывается
+        else x.pausedAt = Date.now();
+      });
+      return;
+    }
     if ((el = t('[data-reset]'))) {
       const h = getState().habits.find((x) => x.id === el.dataset.reset);
       confirmSheet('Начать заново?', `Таймер «${esc(h.title)}» обнулится. Текущий результат (${fmtHuman(sinceMs(h))}) сохранится как рекорд, если он лучше.`, 'Сбросить').then((ok) => {
         if (!ok) return;
-        update((s) => { const x = s.habits.find((y) => y.id === h.id); const cur = sinceMs(x); x.best = Math.max(x.best || 0, cur); (x.resets ||= []).push({ at: Date.now(), ms: cur }); x.startedAt = Date.now(); });
+        update((s) => { const x = s.habits.find((y) => y.id === h.id); const cur = sinceMs(x); x.best = Math.max(x.best || 0, cur); (x.resets ||= []).push({ at: Date.now(), ms: cur }); x.startedAt = Date.now(); delete x.pausedAt; });
         toast('Новая попытка! Ты справишься', '💪');
       });
     }

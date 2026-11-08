@@ -136,7 +136,7 @@ const EN = {
   'Цель в день, минут (например, медитация или чтение)': 'Daily goal, minutes (e.g. meditation or reading)', 'Создать привычку': 'Create habit', 'Удалить привычку': 'Delete habit',
   'Напиши название привычки': 'Write the habit name', 'Привычка создана': 'Habit created', 'Удалить привычку?': 'Delete habit?',
   'и вся её история будут удалены.': 'and all its history will be deleted.', 'Привычка удалена': 'Habit deleted', 'Отметить': 'Check', 'пока нет': 'none yet',
-  'Например: Пить воду': 'E.g. Drink water', 'стаканов': 'glasses', 'Пауза': 'Pause', 'Старт': 'Start', 'идёт': 'running', '· идёт': '· running',
+  'Например: Пить воду': 'E.g. Drink water', 'Продолжить': 'Resume', 'На паузе': 'Paused', 'стаканов': 'glasses', 'Пауза': 'Pause', 'Старт': 'Start', 'идёт': 'running', '· идёт': '· running',
 
   // главная
   '· цель': '· goal', 'Отметь, как ты спал': 'Log how you slept', 'Записать сон': 'Log sleep', 'Тренировка сегодня': "Today's workout",

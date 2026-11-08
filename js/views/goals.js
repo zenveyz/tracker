@@ -133,6 +133,7 @@ export function bind(root) {
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
       wrap.classList.remove('dragging');
       if (active && dx > wrap.offsetWidth * 0.35) {
+        wrap.classList.add('swiped');
         card.style.transform = `translateX(${wrap.offsetWidth}px)`;
         setTimeout(() => complete(wrap.dataset.swipe), 260);
       } else card.style.transform = '';
